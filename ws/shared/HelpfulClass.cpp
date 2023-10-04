@@ -3,9 +3,7 @@
 
 
 /// @brief This function computes the grid c space given an environment and linkLengths for a 2 dof manipulator
-/// @param environment 
-/// @param linkLengths 
-void computeGrid(amp::Environment2D environment, std::vector<double> linkLengths){
+grid computeGrid(amp::Environment2D environment, std::vector<double> linkLengths){
     double x0_min = environment.x_min;
     double x0_max = environment.x_max;
     double x1_min = environment.y_min;
@@ -32,25 +30,21 @@ void computeGrid(amp::Environment2D environment, std::vector<double> linkLengths
 
     amp::DenseArray2D collisions(density,density);
 
-    // now we need to check for collisions
-    // loop through all cells
+    // now we need to check for collisions, loop through all cells
     for (int i = 0; i < density; i++){
         for (int j = 0; j < density; j++){
-            // get the current x0 and x1 values
-            double x0 = x0_min_c + i*(x0_max_c-x0_min_c)/density;
-            double x1 = x1_min_c + j*(x1_max_c-x1_min_c)/density;
-            // std::cout << "x0: " << x0 << " x1: " << x1 << std::endl;
+            // get the current t0 and t1 values
+            double t0 = x0_min_c + i*(x0_max_c-x0_min_c)/density;
+            double t1 = x1_min_c + j*(x1_max_c-x1_min_c)/density;
 
             // check if in collision with any one of the 3 vertices, or between!
-            bool collision = c.inCollision(x0,x1);
-            if (collision){
-                std::cout << "Detected collision at t0: " << x0 << " t1: " << x1 << std::endl;
+            bool collision = c.inCollision(t0,t1);
+            if (collision == true){
+                c.operator()(i,j) = true;
             }
         }
     }
-
-    amp::Visualizer::makeFigure(c);
-    amp::Visualizer::showFigures();
+    return c;
 }
 
 bool grid::inCollision(double x0, double x1) const{ 
@@ -58,8 +52,6 @@ bool grid::inCollision(double x0, double x1) const{
         amp::ManipulatorState state; // joint angles
         state.push_back(x0);
         state.push_back(x1);
-        // output the joint locations
-        //std::cout << "at t0: " << x0 << " at t1: " << x1 << std::endl;
 
         // get foward kinematics of all vertices, then check if collide
         Eigen::Vector2d v0 = robot.getJointLocation(state,0);
@@ -74,7 +66,7 @@ bool grid::inCollision(double x0, double x1) const{
             // now, for each vertice, check if it collides with the line between v0 and v1 and v1 and v2
             for (int j = 0; j < obsVertices.size(); j++){
                 // check if the line between v0 and v1 and v1 and v2 collides with the line between obsVertices[j] and obsVertices[j+1]
-                if (collisionDetection(v0,v1,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()]) || collisionDetection(v1,v2,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()])){
+                if (intersect(v0,v1,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()]) || intersect(v1,v2,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()])){
                     return true; // if happens at all, return true
                 }
             }
@@ -82,46 +74,31 @@ bool grid::inCollision(double x0, double x1) const{
         return false;
 }
 
-bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r) {
-  if (q.x() <= std::max(p.x(), r.x()) && q.x() >= std::min(p.x(), r.x()) &&
-      q.y() <= std::max(p.y(), r.y()) && q.y() >= std::min(p.y(), r.y()))
-        return true;
-  return false;
-}
-
-/// @brief This function takes in four vertices and detects if the lines created by them intersect
-bool collisionDetection(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2) {
-  int o1 = orientation(p1, q1, p2);
-  int o2 = orientation(p1, q1, q2);
-  int o3 = orientation(p2, q2, p1);
-  int o4 = orientation(p2, q2, q1);
-  
-  if (o1 != o2 && o3 != o4)
-    return true;
-  
-  //p1 p2 q1 are colinear. Check whether q1 is on p1->p2
-  if (o1 == 0 && onSegment(p1, p2, q1))
-    return true;
-  if (o2 == 0 && onSegment(p1, q2, q1))
-    return true;
-  if (o3 == 0 && onSegment(p2, p1, q2))
-    return true;
-  if (o4 == 0 && onSegment(p2, q1, q2))
-    return true;
-  return false;
-}
-
-int orientation(Eigen::Vector2d a, Eigen::Vector2d b, Eigen::Vector2d c){
-    int val = (b.y()-a.y())*(c.x()-b.x()) - (b.x()-a.x())*(c.y()-b.y());
-    if (val == 0){
-        return 0;
+bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2){
+    double x1 = p1.x();
+    double y1 = p1.y();
+    double x2 = q1.x();
+    double y2 = q1.y();
+    double x3 = p2.x();
+    double y3 = p2.y();
+    double x4 = q2.x();
+    double y4 = q2.y();
+    // Check if none of the lines are of length 0
+    if ((x1 == x2 && y1 == y2) || (x3 == x4 && y3 == y4)) {
+        return false;
     }
-    else if (val > 0){
-        return 1;
+    double denom = ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+    // Lines are parallel
+    if (denom == 0) {
+        return false;
     }
-    else{
-        return 2;
+    double ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3))/denom;
+    double ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3))/denom;
+    // is the intersection along the segments
+    if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+        return false;
     }
+    return true; // is intersection
 }
 
 Eigen::Vector2d Link2d::getJointLocation(const amp::ManipulatorState& state, uint32_t joint_index) const{

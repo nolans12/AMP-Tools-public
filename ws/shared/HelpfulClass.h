@@ -1,21 +1,5 @@
 #include "AMPCore.h"
 
-void computeGrid(amp::Environment2D environment, std::vector<double> linkLengths);
-std::vector<int> collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d position);
-bool collisionDetection(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);
-int orientation(Eigen::Vector2d a, Eigen::Vector2d b, Eigen::Vector2d c);
-bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r);
-
-// class config : public amp::ConfigurationSpace2D{
-//     public:
-//         config(double x0_min, double x0_max, double x1_min, double x1_max)
-//             : amp::ConfigurationSpace2D(x0_min, x0_max, x1_min, x1_max){}
-
-//         bool inCollision(double x0, double x1) const{ 
-//             return false;
-//         }
-// };
-
 class Link2d : public amp::LinkManipulator2D{
     public:
         // declare class
@@ -45,10 +29,16 @@ class Link2d : public amp::LinkManipulator2D{
 class grid : public amp::GridCSpace2D{
     public:
         grid(Link2d robot, amp::Environment2D environment, std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max)
-            : amp::GridCSpace2D(x0_cells, x1_cells, x0_min, x0_max, x1_min, x1_max){}
+            : amp::GridCSpace2D(x0_cells, x1_cells, x0_min, x0_max, x1_min, x1_max){
+                this->robot = robot;
+                this->environment = environment;
+            }
 
         bool inCollision(double x0, double x1) const;
     private:
         Link2d robot;
         amp::Environment2D environment;
 };
+
+grid computeGrid(amp::Environment2D environment, std::vector<double> linkLengths);
+bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);

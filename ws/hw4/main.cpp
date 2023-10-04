@@ -151,61 +151,19 @@ std::cout << "Inverse Kinematics: " << std::endl;
     //amp::Visualizer::showFigures();
 
 std::cout << "/////// EXERCISE 3 ////////" << std::endl;
-    // create a c-space constructor for 2-link manipulator
-    // create manipulator
-
-    // Link2d linkRobot = Link2d(Eigen::Vector2d(0,0),link_lengths3); // base of (0,0) 2 lengths of 1.
-
-    // // get environment
-    // amp::Environment2D partA = amp::HW4::getEx3Workspace1();
-
-    // // create empty state
-    // amp::ManipulatorState state; // joint angles
-    // state.push_back(0);
-    // state.push_back(0);
-
-    // // plot workspace environment
-    // amp::Visualizer::makeFigure(partA, linkRobot, state);
 
     std::vector<double> links;
     links.push_back(1);
     links.push_back(1);
-    computeGrid(amp::HW4::getEx3Workspace1(), links);
+    grid prob1 = computeGrid(amp::HW4::getEx3Workspace1(), links);
+    grid prob2 = computeGrid(amp::HW4::getEx3Workspace2(), links);
+    grid prob3 = computeGrid(amp::HW4::getEx3Workspace3(), links);
 
-    // // create c-space
-    // // we will use x0 and x1 min and max as 0 and 2pi, as they are rotating link manipulators
-    // double x0_min = 0;
-    // double x0_max = M_PI*2;
-    // double x1_min = 0;
-    // double x1_max = M_PI*2;
-    // double density = 100;
-
-    // grid c(density, density, x0_min, x0_max, x1_min, x1_max);
-    // //std::cout << c.size().first << " " << c.size().second << std::endl;
-
-    // amp::DenseArray2D collisions(density,density);
-
-    // // now we need to check for collisions
-    // // loop through all cells
-    // for (int i = 0; i < density; i++){
-    //     for (int j = 0; j < density; j++){
-    //         // get the current x0 and x1 values
-    //         double x0 = x0_min + i*(x0_max-x0_min)/density;
-    //         double x1 = x1_min + j*(x1_max-x1_min)/density;
-    //         // std::cout << "x0: " << x0 << " x1: " << x1 << std::endl;
-
-    //         // check if in collision
-    //         bool collision = c.inCollision(x0,x1);
-           
-    //     }
-    // }
-
-
-    // // try plotitng
-    // //amp::Visualizer::makeFigure(c);
-    // amp::Visualizer::showFigures();
-
+    amp::Visualizer::makeFigure(prob1);
+    amp::Visualizer::makeFigure(prob2);
+    amp::Visualizer::makeFigure(prob3);
+    amp::Visualizer::showFigures();
     // Grade method
-    //amp::HW4::grade<MyLinkManipulator>(constructor, "nonhuman.biologic@myspace.edu", argc, argv);
+    //amp::HW4::grade<Link2d>(a, "nonhuman.biologic@myspace.edu", argc, argv);
     return 0;
 }
