@@ -101,12 +101,13 @@ std::cout << "/////// EXERCISE 2 ////////" << std::endl;
 
 // 2a
 // inputs:
+std::cout << "Forward Kinematics: " << std::endl;
     double a1 = 0.5;
     double a2 = 1;
     double a3 = 0.5;
-    double t1 = M_1_PI*10/6;
-    double t2 = M_1_PI*10/3;
-    double t3 = 7*M_1_PI*10/4;
+    double t1 = M_PI/6;
+    double t2 = M_PI/3;
+    double t3 = 7*M_PI/4;
     Eigen::Vector2d base(0,0);
 
     std::vector<double> link_lengths;
@@ -125,8 +126,44 @@ std::cout << "/////// EXERCISE 2 ////////" << std::endl;
     // perform forward kinematics
     manipulator.getJointLocation(link_angles, 0);
 
+    // plot
     amp::Visualizer::makeFigure(manipulator, link_angles);
-    amp::Visualizer::showFigures();
+    //amp::Visualizer::showFigures();
+//2b
+std::cout << "Inverse Kinematics: " << std::endl;
+    // perform inverse kinematics
+    Eigen::Vector2d end_effector(2, 0);
+    a1 = 1;
+    a2 = 0.5;
+    a3 = 1;
+    std::vector<double> link_lengths2;
+    link_lengths2.push_back(a1);
+    link_lengths2.push_back(a2);
+    link_lengths2.push_back(a3);
+    Link2d manipulator2(base, link_lengths2);
+
+    std::vector<double> ik_angles = manipulator2.getConfigurationFromIK(end_effector);
+    // output all ik_angles
+    for (int i = 0; i < ik_angles.size(); i++){
+        std::cout << "angle " << i << ": " << ik_angles[i] << std::endl;
+    }
+    // plot
+    amp::Visualizer::makeFigure(manipulator2, ik_angles);
+    //amp::Visualizer::showFigures();
+
+std::cout << "/////// EXERCISE 3 ////////" << std::endl;
+    // create a c-space constructor for 2-link manipulator
+    // create manipulator
+    std::vector<double> link_lengths3;
+    a1 = 1;
+    a2 = 1;
+    link_lengths3.push_back(a1);
+    link_lengths3.push_back(a2);
+    Link2d linkRobot = Link2d(Eigen::Vector2d(0,0),link_lengths3); // base of (0,0) 2 lengths of 1.
+
+    // get environment
+    amp::Environment2D partA = amp::HW4::getEx3Workspace1();
+
 
 
     // Grade method

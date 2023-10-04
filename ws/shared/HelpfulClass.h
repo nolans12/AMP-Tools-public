@@ -68,8 +68,46 @@ class Link2d : public amp::LinkManipulator2D{
         /// @param end_effector_location End effector coordinate
         /// @return Joint angle state (radians) in increasing joint index order. Must have size() ==nLinks()
         amp::ManipulatorState getConfigurationFromIK(const Eigen::Vector2d& end_effector_location) const{
+            // get link lengths
+            std::vector<double> link_lens = getLinkLengths();
+            // get base location
+            Eigen::Vector2d base_loc = getBaseLocation();
+            Eigen::Vector2d endLoc(end_effector_location);
+            std::vector<double> link_angles;
+            int count = 0;
+            // if we have 2 links, we can solve for the angles
+            // thus, set first angle to 0, if 3 links, to constain to 2 dof.
+            if (link_lens.size() == 3){
+                link_angles.push_back(0); // make it 0 
+                // now we solve for new end effector position we are aiming for, with 2 dof
+                endLoc = endLoc - Eigen::Vector2d(link_lens[0], 0);
+                count++; // increment so that we skip the first link later
+            }
+            //std::cout << "New end location: x: " << endLoc.x() << " y: " << endLoc.y() << std::endl;
+
+            double a1 = link_lens[0+count];
+            double a2 = link_lens[1+count];
+            //std::cout << "a1: " << a1 << " a2: " << a2 << std::endl;
             
-            return amp::ManipulatorState();
+            // now, perform inverse kinematics on 2 dof to new endLoc (maybe)
+            // double temp = acos((endLoc.x()*endLoc.x() + endLoc.y()*endLoc.y() - a1*a1 - a2*a2)/(2*a1*a2));
+            // double t2 = asin(sqrt(1-cos(temp)*cos(temp))); // sign check
+            // std::cout << t2 << std::endl;
+            
+            // double temp2_cos = (endLoc.x()*(a1 + a2*cos(t2)) + endLoc.y()*a2*sin(t2))/(endLoc.x()*endLoc.x() + endLoc.y()*endLoc.y());
+            // double t1 = asin(sqrt(1-temp2_cos*temp2_cos));
+            // //std::cout << t1 << std::endl;
+
+            double c2 = (endLoc.x()*endLoc.x() + endLoc.y()*endLoc.y() - a1*a1 - a2*a2)/(2*a1*a2);
+            double s2 = sqrt(1-c2*c2);
+            double t1 = atan2(endLoc.y(), endLoc.x()) - atan2(a2*s2, a1+a2*c2);
+            double t2 = atan2(s2, c2);
+
+            link_angles.push_back(t1);
+            link_angles.push_back(t2);
+
+            
+            return link_angles;
         }
 
     private:
@@ -82,3 +120,4 @@ class Link2d : public amp::LinkManipulator2D{
             return T;
         }
 };
+
