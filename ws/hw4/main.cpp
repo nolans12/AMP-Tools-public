@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     /* Include this line to have different randomized environments every time you run your code (NOTE: this has no affect on grade()) */
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
-/////// EXERCISE 1 ////////
+std::cout << "/////// EXERCISE 1 ////////" << std::endl;
     amp::Polygon obstacle = amp::HW4::getEx1TriangleObstacle();
     amp::Polygon robot = amp::HW4::getEx1TriangleObstacle();
 
@@ -94,48 +94,37 @@ int main(int argc, char** argv) {
         heights.push_back(i*360/12);
     }
     amp::Visualizer::makeFigure(minkowskiRobots, heights);
-    amp::Visualizer::showFigures();
+    //amp::Visualizer::showFigures();
 
 
-/////// EXERCISE 2 ////////
+std::cout << "/////// EXERCISE 2 ////////" << std::endl;
 
 // 2a
-    // inputs:
+// inputs:
     double a1 = 0.5;
     double a2 = 1;
     double a3 = 0.5;
-    double t1 = M_2_PI/6;
-    double t2 = M_2_PI/3;
-    double t3 = 7*M_2_PI/4;
+    double t1 = M_1_PI*10/6;
+    double t2 = M_1_PI*10/3;
+    double t3 = 7*M_1_PI*10/4;
+    Eigen::Vector2d base(0,0);
 
-    // make a vector to store link lengths
     std::vector<double> link_lengths;
     link_lengths.push_back(a1);
     link_lengths.push_back(a2);
     link_lengths.push_back(a3);
-
-    // also make a state vector
     std::vector<double> link_angles;
     link_angles.push_back(t1);
     link_angles.push_back(t2);
     link_angles.push_back(t3);
 
-    // call T function with inputs:
 
-    Eigen::MatrixXd start(3,1);
-    start << 0, 0, 1;
-    //std::cout << start << std::endl;
+    // make the link manipulator
+    Link2d manipulator(base, link_lengths);
+    
+    // perform forward kinematics
+    manipulator.getJointLocation(link_angles, 0);
 
-    Eigen::MatrixXd result = Tmatrix(t1,0)*Tmatrix(t2, a1)*Tmatrix(t3, a2)*Tmatrix(0, a3)*start;
-    //std::cout << result << std::endl;
-
-    // put in a finalized point
-    Eigen::Vector2d final(result(0), result(1)); // final results in a vector2d
-
-    // now plot the link manipulator
-    Link2d manipulator(link_lengths);
-    amp::ManipulatorState state2a = manipulator.getConfigurationFromIK(final);
-    //amp::ManipulatorState state2a = prob2a.getConfigurationFromIK(final);
     amp::Visualizer::makeFigure(manipulator, link_angles);
     amp::Visualizer::showFigures();
 
