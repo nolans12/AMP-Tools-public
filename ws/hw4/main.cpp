@@ -143,9 +143,9 @@ std::cout << "Inverse Kinematics: " << std::endl;
 
     std::vector<double> ik_angles = manipulator2.getConfigurationFromIK(end_effector);
     // output all ik_angles
-    for (int i = 0; i < ik_angles.size(); i++){
-        std::cout << "angle " << i << ": " << ik_angles[i] << std::endl;
-    }
+    // for (int i = 0; i < ik_angles.size(); i++){
+    //     std::cout << "angle " << i << ": " << ik_angles[i] << std::endl;
+    // }
     // plot
     amp::Visualizer::makeFigure(manipulator2, ik_angles);
     //amp::Visualizer::showFigures();
@@ -163,7 +163,9 @@ std::cout << "/////// EXERCISE 3 ////////" << std::endl;
     amp::Visualizer::makeFigure(prob2);
     amp::Visualizer::makeFigure(prob3);
     amp::Visualizer::showFigures();
+
     // Grade method
-    //amp::HW4::grade<Link2d>(a, "nonhuman.biologic@myspace.edu", argc, argv);
+    gridConstruct constructor; // create constructor instance
+    amp::HW4::grade<Link2d>(constructor, "nolan.stevenson@colorado.edu", argc, argv);
     return 0;
 }

@@ -9,7 +9,7 @@ grid computeGrid(amp::Environment2D environment, std::vector<double> linkLengths
     double x1_min = environment.y_min;
     double x1_max = environment.y_max;
 
-    double density = 100; // hardset? will be density x density grid.
+    double density = 100; // hardset, will be density x density grid.
 
 // create manipulator
     Link2d robot = Link2d(Eigen::Vector2d(0,0),linkLengths); // base of (0,0) assumed
@@ -48,7 +48,6 @@ grid computeGrid(amp::Environment2D environment, std::vector<double> linkLengths
 }
 
 bool grid::inCollision(double x0, double x1) const{ 
-    
         amp::ManipulatorState state; // joint angles
         state.push_back(x0);
         state.push_back(x1);
@@ -98,7 +97,7 @@ bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen
     if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
         return false;
     }
-    return true; // is intersection
+    return true; // isnt intersection
 }
 
 Eigen::Vector2d Link2d::getJointLocation(const amp::ManipulatorState& state, uint32_t joint_index) const{
@@ -111,8 +110,8 @@ Eigen::Vector2d Link2d::getJointLocation(const amp::ManipulatorState& state, uin
     // perform forward kinematics
     Eigen::MatrixXd curr(3,3); // start with identity
     curr << 1, 0, 0,
-                0, 1, 0,
-                0, 0, 1;
+            0, 1, 0,
+            0, 0, 1;
 
     int i = 0;
     while (i < joint_index+1){
@@ -127,11 +126,8 @@ Eigen::Vector2d Link2d::getJointLocation(const amp::ManipulatorState& state, uin
         }
         i++;
     }
-    //std::cout << curr << std::endl;
     // now compute final position
     Eigen::MatrixXd final = curr*Eigen::Vector3d(base_loc.x(), base_loc.y(), 1);
-    // output final[0] and final[1]
-    //std::cout << "joint index: " << joint_index << ", x: " << final(0) << " y: " << final(1) << std::endl;
 
     return Eigen::Vector2d(final(0),final(1));
 }
@@ -143,30 +139,69 @@ amp::ManipulatorState Link2d::getConfigurationFromIK(const Eigen::Vector2d& end_
     Eigen::Vector2d base_loc = getBaseLocation();
     Eigen::Vector2d endLoc(end_effector_location);
     std::vector<double> link_angles;
-    int count = 0;
-    // if we have 2 links, we can solve for the angles
-    // thus, set first angle to 0, if 3 links, to constain to 2 dof.
-    if (link_lens.size() == 3){
-        link_angles.push_back(0); // make it 0 
+
+    Eigen::Vector2d newEndLoc;
+    //if we have 2 links, we can solve for the angles
+    //thus, set first angle to point first link in direction of end_effector_location, so 3 links, constrains to 2 dof.
+    if (link_lens.size() > 2){
+        // find angle it should point too:
+        double angle = atan2(endLoc.y(), endLoc.x());
         // now we solve for new end effector position we are aiming for, with 2 dof
-        endLoc = endLoc - Eigen::Vector2d(link_lens[0], 0);
-        count++; // increment so that we skip the first link later
+        newEndLoc = endLoc - Eigen::Vector2d(link_lens[0]*cos(angle), link_lens[0]*sin(angle));
+        // increment so that we skip the first link later
+        // now perform inverse kinematics on 2dof
+        double a1 = link_lens[1];
+        double a2 = link_lens[2];
+        double c2 = (newEndLoc.x()*newEndLoc.x() + newEndLoc.y()*newEndLoc.y() - a1*a1 - a2*a2)/(2*a1*a2);
+        double s2 = sqrt(1-c2*c2);
+
+        // check if reachable
+        //if (!std::isnan(s2) && !std::isnan(c2)){
+            double t1 = atan2(newEndLoc.y(), newEndLoc.x()) - atan2(a2*s2, a1+a2*c2);
+            double t2 = atan2(s2, c2);
+            link_angles.push_back(angle);
+            link_angles.push_back(t1);
+            link_angles.push_back(t2);
+            return link_angles;
+       // }
     }
-    //std::cout << "New end location: x: " << endLoc.x() << " y: " << endLoc.y() << std::endl;
 
-    double a1 = link_lens[0+count];
-    double a2 = link_lens[1+count];
-    //std::cout << "a1: " << a1 << " a2: " << a2 << std::endl;
+    // for(double angle = 0; angle <= 2*M_PI; angle += 0.005){
+    //     // compute new end location
+    //     Eigen::Vector2d newEndLoc = endLoc - Eigen::Vector2d(link_lens[0]*cos(angle), link_lens[0]*sin(angle));
+        
+    //     // now perform inverse kinematics on 2dof
+    //     double a1 = link_lens[1];
+    //     double a2 = link_lens[2];
 
-    double c2 = (endLoc.x()*endLoc.x() + endLoc.y()*endLoc.y() - a1*a1 - a2*a2)/(2*a1*a2);
-    double s2 = sqrt(1-c2*c2);
-    double t1 = atan2(endLoc.y(), endLoc.x()) - atan2(a2*s2, a1+a2*c2);
-    double t2 = atan2(s2, c2);
+    //     double c2 = (newEndLoc.x()*newEndLoc.x() + newEndLoc.y()*newEndLoc.y() - a1*a1 - a2*a2)/(2*a1*a2);
+    //     double s2 = sqrt(1-c2*c2);
 
-    link_angles.push_back(t1);
-    link_angles.push_back(t2);
+    //     // check if reachable
+    //     if (!std::isnan(s2) && !std::isnan(c2)){
+    //         double t1 = atan2(newEndLoc.y(), newEndLoc.x()) - atan2(a2*s2, a1+a2*c2);
+    //         double t2 = atan2(s2, c2);
+    //         link_angles.push_back(angle);
+    //         link_angles.push_back(t1);
+    //         link_angles.push_back(t2);
+    //         return link_angles;
+    //     }
+    // }
 
-    
+    // double a1 = link_lens[0+count];
+    // double a2 = link_lens[1+count];
+
+    // double c2 = (endLoc.x()*endLoc.x() + endLoc.y()*endLoc.y() - a1*a1 - a2*a2)/(2*a1*a2);
+    // double s2 = sqrt(1-c2*c2);
+    // double t1 = atan2(endLoc.y(), endLoc.x()) - atan2(a2*s2, a1+a2*c2);
+    // double t2 = atan2(s2, c2);
+
+    // link_angles.push_back(t1);
+    // link_angles.push_back(t2);
+
+    link_angles.push_back(0);
+    link_angles.push_back(0);
+    link_angles.push_back(0);
     return link_angles;
 }
 
@@ -176,4 +211,35 @@ Eigen::MatrixXd Link2d::Tmatrix(double theta, double a) const{
             sin(theta), cos(theta), 0,
             0, 0, 1;
     return T;
+}
+
+std::unique_ptr<amp::GridCSpace2D> gridConstruct::construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env){
+    // create c-space, hardcoded
+    double density = 100;
+    double x0_min_c = 0;
+    double x0_max_c = 2*M_PI;
+    double x1_min_c = 0;
+    double x1_max_c = 2*M_PI;
+
+    Link2d linkTest(manipulator.getLinkLengths()); // construct new Link2d instance, so that grid can have correct arguments
+
+    std::unique_ptr<amp::GridCSpace2D> cspace = std::make_unique<grid>(linkTest, env, density, density, x0_min_c, x0_max_c, x1_min_c, x1_max_c);
+
+    amp::DenseArray2D collisions(density,density);
+
+    // now we need to check for collisions, loop through all cells
+    for (int i = 0; i < density; i++){
+        for (int j = 0; j < density; j++){
+            // get the current t0 and t1 values
+            double t0 = x0_min_c + i*(x0_max_c-x0_min_c)/density;
+            double t1 = x1_min_c + j*(x1_max_c-x1_min_c)/density;
+
+            // check if in collision with any one of the 3 vertices, or between!
+            bool collision = cspace->inCollision(t0,t1);
+            if (collision == true){
+                cspace->operator()(i,j) = true;
+            }
+        }
+    }
+    return cspace;
 }

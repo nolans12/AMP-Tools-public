@@ -1,4 +1,5 @@
 #include "AMPCore.h"
+#include "hw/HW4.h"
 
 class Link2d : public amp::LinkManipulator2D{
     public:
@@ -38,6 +39,12 @@ class grid : public amp::GridCSpace2D{
     private:
         Link2d robot;
         amp::Environment2D environment;
+};
+
+class gridConstruct : public amp::GridCSpace2DConstructor{
+    public:
+        gridConstruct() : amp::GridCSpace2DConstructor(){}
+        std::unique_ptr<amp::GridCSpace2D> construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env);
 };
 
 grid computeGrid(amp::Environment2D environment, std::vector<double> linkLengths);
