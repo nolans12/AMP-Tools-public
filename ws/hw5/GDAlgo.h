@@ -26,6 +26,8 @@ class GDAlgo : public amp::GDAlgorithm{
 
         Eigen::Vector2d intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);
 
+        //Eigen::Vector2d additionalRepulse(const amp::Problem2D& problem, const Eigen::Vector2d& point);
+
     private:
         double d_star;
         double zeta;

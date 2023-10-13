@@ -18,14 +18,12 @@ int main(int argc, char** argv) {
     workspaces.push_back(amp::HW2::getWorkspace1());
     workspaces.push_back(amp::HW2::getWorkspace2());
 
-    workspaces[1].q_init = workspaces[1].q_init + Eigen::Vector2d(0, -0.01);
-
 // hyper parameters:
     // attractive
     std::vector<double> d_star; // switches from quadratic to linear
-    d_star.push_back(1);
     d_star.push_back(0.1);
-    d_star.push_back(0.5);
+    d_star.push_back(0.1);
+    d_star.push_back(0.1);
 
     std::vector<double> zeta; // amplitude of attractive potential
     zeta.push_back(1);
@@ -34,9 +32,9 @@ int main(int argc, char** argv) {
 
     // repulsive
     std::vector<double> q_star; // switch from repulsing to none
-    q_star.push_back(2);
     q_star.push_back(0.25);
-    q_star.push_back(0.5);
+    q_star.push_back(0.25);
+    q_star.push_back(0.25);
 
     std::vector<double> eta; // amplitude of repulsive potential
     eta.push_back(0.1);
@@ -59,8 +57,15 @@ int main(int argc, char** argv) {
 
         // visualize the paths
         amp::Visualizer::makeFigure(workspaces[i], currPath);
+        bool currSuccess = amp::HW5::check(currPath, workspaces[i]);
+        LOG("Found valid solution found?: " << (currSuccess ? "Yes!" : "No :("));
+        LOG("path length: " << currPath.length());
     }
     amp::Visualizer::showFigures();
+
+    // get to pass for workspace 1 and 2:
+    GDAlgo gd(d_star[1], zeta[1], q_star[1], eta[1], epsilon, step, maxStep, numRay); 
+    amp::HW5::grade(gd, "nolan.stevenson@colorado.edu", argc, argv);
 
     return 0;
 }

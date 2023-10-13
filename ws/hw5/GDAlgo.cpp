@@ -3,14 +3,15 @@
 amp::Path2D GDAlgo::plan(const amp::Problem2D& problem){
     // initiate the path
     amp::Path2D path;
-
+   
     // now calculate the path using gradient decent
     // first get the start and goal
-    Eigen::Vector2d start = problem.q_init;
+    path.waypoints.push_back(problem.q_init); // start point
+    Eigen::Vector2d start = problem.q_init + Eigen::Vector2d(0, -0.01);
     Eigen::Vector2d goal = problem.q_goal;
         // output the start and goal vertices
-        std::cout << "Start point: x: " << start.x() << ", y: " << start.y() << std::endl;
-        std::cout << "Goal point: x: " << goal.x() << ", y: " << goal.y() << std::endl;
+        std::cout << "Start point: x: " << problem.q_init.x() << ", y: " << problem.q_init.y() << std::endl;
+        std::cout << "Goal point: x: " << problem.q_goal.x() << ", y: " << problem.q_goal.y() << std::endl;
 
     // now calculate the path
     path.waypoints.push_back(start); // start point
@@ -59,9 +60,10 @@ Eigen::Vector2d GDAlgo::repulse(Eigen::Vector2d curr, const amp::Problem2D& prob
 
     Eigen::Vector2d closestVec = rayDetect(problem, curr) - curr;
     double dist = closestVec.norm();
+    //Eigen::Vector2d extraRepulse = additionalRepulse(problem,curr); // This additional repulsion is to attempt to solve local minimums caused by workspace 3
 
     if (dist <= q_star){ // if the distance is less than q_star, very close to obstacle
-        return eta * (1 / q_star - 1 / dist) * (1 / (dist * dist)) * -closestVec;
+        return eta * (1 / q_star - 1 / dist) * (1 / (dist * dist)) * -closestVec; //+ extraRepulse;
     }
     else{ // if the distance is greater than q_star, far from obstacle
         return Eigen::Vector2d(0, 0);
@@ -104,6 +106,33 @@ Eigen::Vector2d GDAlgo::rayDetect(const amp::Problem2D& problem, const Eigen::Ve
     }
     return currMin;
 }
+
+// Eigen::Vector2d GDAlgo::additionalRepulse(const amp::Problem2D& problem, const Eigen::Vector2d& point){
+//     // loop through all obstacles in problem, find the centroid of each obstacle
+//     // get the relative distance compared to point
+//     // and do a weighted sum, of distance b/w point and centroid divided by distance b/w point and centroid
+
+//     std::vector<amp::Polygon> obstacles = problem.obstacles;
+//     Eigen::Vector2d repulse = Eigen::Vector2d(0,0);
+//     for (int i = 0; i < obstacles.size(); i++){
+//         // get the vertices of the obstacle
+//         std::vector<Eigen::Vector2d> vertices = obstacles[i].verticesCCW();
+
+//         Eigen::Vector2d centroid = Eigen::Vector2d(0,0);
+//         // now iterate through the vertices, finding the centroid for each obstacle
+//         for (int j = 0; j < vertices.size(); j++){
+//             centroid += vertices[j];
+//         }
+//         centroid = centroid / vertices.size();
+//         // now compute the direction vector for point to centroid as well as the distance
+//         double distance = (point - centroid).norm();
+//         Eigen::Vector2d directVector = (point - centroid).normalized();
+
+//         // now add to the repulse vector
+//         repulse += (1 / distance) * directVector;
+//     }
+//     return repulse;
+// }
 
 Eigen::Vector2d GDAlgo::intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2){
     double x1 = p1.x();
