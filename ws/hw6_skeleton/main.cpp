@@ -81,4 +81,5 @@ int main(int argc, char** argv) {
     // amp::RNG::seed(amp::RNG::randiUnbounded());
     // amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("nolan.stevenson@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple(), std::make_tuple());
     return 0;
+
 }
