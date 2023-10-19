@@ -65,15 +65,14 @@ class MyManipWFAlgo : public amp::ManipulatorWaveFrontAlgorithm {
             return amp::ManipulatorTrajectory2Link();
         }
         
+        
         // You need to implement here
         virtual amp::Path2D planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace) override;
 };
 
 class MyAStarAlgo : public amp::AStar {
     public:
-        virtual GraphSearchResult search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) override {
-            return GraphSearchResult();
-        }
+        virtual GraphSearchResult search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) override;
 };
 
 bool cellCollision(amp::Environment2D environment, Eigen::Vector2d point);

@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     links.push_back(1);
     Link2d robot = Link2d(Eigen::Vector2d(0,0),links); // base of (0,0) assumed
 
-    // make a MyCSpaceTor instance
+    // // make a MyCSpaceTor instance
     MyCSpaceCtor myCSpaceCtor;
     std::unique_ptr<amp::GridCSpace2D> grid4a = myCSpaceCtor.construct(robot, problem4a);
     std::unique_ptr<amp::GridCSpace2D> grid4b = myCSpaceCtor.construct(robot, problem4b);
@@ -51,20 +51,22 @@ int main(int argc, char** argv) {
     // get the end points:
     ManipulatorState q_init = robot.getConfigurationFromIK(Eigen::Vector2d(-2,0));
     ManipulatorState q_goal = robot.getConfigurationFromIK(Eigen::Vector2d(2,0));
-    // std::cout << q_init[0] << " " << q_init[1] << std::endl;
-    // std::cout << q_goal[0] << " " << q_goal[1] << std::endl;
-    // convert these to eigenvector2d
+
+    // create paths
     amp::Path2D path4a = myManipWFAlgo.planInCSpace(Eigen::Vector2d(q_init[0], q_init[1]), Eigen::Vector2d(q_goal[0], q_goal[1]), *grid4a);
     amp::Path2D path4b = myManipWFAlgo.planInCSpace(Eigen::Vector2d(q_init[0], q_init[1]), Eigen::Vector2d(q_goal[0], q_goal[1]), *grid4b);
     amp::Path2D path4c = myManipWFAlgo.planInCSpace(Eigen::Vector2d(q_init[0], q_init[1]), Eigen::Vector2d(q_goal[0], q_goal[1]), *grid4c);
 
     // now visualize:
-    amp::Visualizer::makeFigure(*grid4a);
-    amp::Visualizer::makeFigure(*grid4b);
-    amp::Visualizer::makeFigure(*grid4c);
+    // amp::Visualizer::makeFigure(*grid4a);
+    // amp::Visualizer::makeFigure(*grid4b);
+    // amp::Visualizer::makeFigure(*grid4c);
     amp::Visualizer::makeFigure(*grid4a, path4a);
     amp::Visualizer::makeFigure(*grid4b, path4b);
     amp::Visualizer::makeFigure(*grid4c, path4c);
+    amp::Visualizer::makeFigure(problem4a, robot, path4a);
+    amp::Visualizer::makeFigure(problem4b, robot, path4b);
+    amp::Visualizer::makeFigure(problem4c, robot, path4c);
     amp::Visualizer::showFigures();
 
     bool successProb2a = HW6::checkPointAgentPlan(path2a, problem2a);
@@ -78,8 +80,24 @@ int main(int argc, char** argv) {
     bool successProb4c = HW6::checkLinkManipulatorPlan(path4c, robot, problem4c);
     LOG("Found valid solution to workspace 4c using point agent?: " << (successProb4c ? "Yes!" : "No :("));
 
+// Exercise 3
+// ==========/
+
+    // Implement A*
+    MyAStarAlgo myAStarAlgo;
+
+    // Get the resulting GraphSearchResult
+
+    // input a heuristic of all 0s
+    // heuristic = amp::SearchHeuristic;
+    MyAStarAlgo::GraphSearchResult result = myAStarAlgo.search(amp::HW6::getEx3SPP(), amp::HW6::getEx3Heuristic());
+
+    // check for success
+    bool successExerecise3 = HW6::checkGraphSearchResult(result, amp::HW6::getEx3SPP(), amp::HW6::getEx3Heuristic());
+    LOG("Found valid solution using A*?: " << (successExerecise3 ? "Yes!" : "No :("));
+
     // amp::RNG::seed(amp::RNG::randiUnbounded());
-    // amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("nolan.stevenson@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple(), std::make_tuple());
+    amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("nolan.stevenson@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple(), std::make_tuple());
     return 0;
 
 }

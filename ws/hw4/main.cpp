@@ -114,10 +114,11 @@ std::cout << "Forward Kinematics: " << std::endl;
     link_lengths.push_back(a1);
     link_lengths.push_back(a2);
     link_lengths.push_back(a3);
-    std::vector<double> link_angles;
-    link_angles.push_back(t1);
-    link_angles.push_back(t2);
-    link_angles.push_back(t3);
+    amp::ManipulatorState link_angles;
+    link_angles[0] = (t1);
+    link_angles[1] = (t2);
+    link_angles[2] = (t3);
+
 
     // make the link manipulator
     Link2d manipulator(base, link_lengths);
@@ -141,7 +142,7 @@ std::cout << "Inverse Kinematics: " << std::endl;
     link_lengths2.push_back(a3);
     Link2d manipulator2(base, link_lengths2);
 
-    std::vector<double> ik_angles = manipulator2.getConfigurationFromIK(end_effector);
+    amp::ManipulatorState ik_angles = manipulator2.getConfigurationFromIK(end_effector);
     // output all ik_angles
     // for (int i = 0; i < ik_angles.size(); i++){
     //     std::cout << "angle " << i << ": " << ik_angles[i] << std::endl;

@@ -14,9 +14,8 @@ grid computeGrid(amp::Environment2D environment, std::vector<double> linkLengths
 // create manipulator
     Link2d robot = Link2d(Eigen::Vector2d(0,0),linkLengths); // base of (0,0) assumed
     // for plotting, assuming 0 joint angles
-    amp::ManipulatorState state;
-    state.push_back(0);
-    state.push_back(0);
+    amp::ManipulatorState state(2);
+    state << 0, 0;
 
     // plot the workspace environment
     amp::Visualizer::makeFigure(environment, robot, state);
@@ -48,9 +47,8 @@ grid computeGrid(amp::Environment2D environment, std::vector<double> linkLengths
 }
 
 bool grid::inCollision(double x0, double x1) const{ 
-        amp::ManipulatorState state; // joint angles
-        state.push_back(x0);
-        state.push_back(x1);
+        amp::ManipulatorState state(2); // joint angles
+        state << x0, x1;
 
         // get foward kinematics of all vertices, then check if collide
         Eigen::Vector2d v0 = robot.getJointLocation(state,0);
@@ -162,7 +160,9 @@ amp::ManipulatorState Link2d::getConfigurationFromIK(const Eigen::Vector2d& end_
             link_angles.push_back(angle);
             link_angles.push_back(t1);
             link_angles.push_back(t2);
-            return link_angles;
+            amp::ManipulatorState state(link_angles.size());
+            state << link_angles[0], link_angles[1], link_angles[2];
+            return state;
        // }
     }
 
@@ -199,11 +199,9 @@ amp::ManipulatorState Link2d::getConfigurationFromIK(const Eigen::Vector2d& end_
     link_angles.push_back(t1);
     link_angles.push_back(t2);
 
-    // std::cout << "got to this case" << std::endl;
-    // link_angles.push_back(0);
-    // link_angles.push_back(0);
-    // link_angles.push_back(0);
-    return link_angles;
+    amp::ManipulatorState state(link_angles.size());
+    state << link_angles[0], link_angles[1];
+    return state;
 }
 
 Eigen::MatrixXd Link2d::Tmatrix(double theta, double a) const{
