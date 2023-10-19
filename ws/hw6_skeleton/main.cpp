@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
     amp::Path2D path2b = myPointWFAlgo.planInCSpace(problem2b.q_init, problem2b.q_goal, *gridCSpace2b);
 
     // visualize problem with path
-    amp::Visualizer::makeFigure(problem2a, path2a);
-    amp::Visualizer::makeFigure(problem2b, path2b);
+    // amp::Visualizer::makeFigure(problem2a, path2a);
+    // amp::Visualizer::makeFigure(problem2b, path2b);
 
     // print the path of path2a and path2b
     LOG("path length for 2a: " << path2a.length());
@@ -57,17 +57,24 @@ int main(int argc, char** argv) {
     amp::Path2D path4b = myManipWFAlgo.planInCSpace(Eigen::Vector2d(q_init[0], q_init[1]), Eigen::Vector2d(q_goal[0], q_goal[1]), *grid4b);
     amp::Path2D path4c = myManipWFAlgo.planInCSpace(Eigen::Vector2d(q_init[0], q_init[1]), Eigen::Vector2d(q_goal[0], q_goal[1]), *grid4c);
 
+    amp::Path pathStruct;
+    // try unwrapping path:
+    // amp::unwrapPath(path4a, Eigen::Vector2d(0,0), Eigen::Vector2d(2*M_PI,2*M_PI));
+    // amp::unwrapPath(path4b, Eigen::Vector2d(0,0), Eigen::Vector2d(2*M_PI,2*M_PI));
+    // amp::unwrapPath(path4c, Eigen::Vector2d(0,0), Eigen::Vector2d(2*M_PI,2*M_PI));
+   
     // now visualize:
     // amp::Visualizer::makeFigure(*grid4a);
     // amp::Visualizer::makeFigure(*grid4b);
     // amp::Visualizer::makeFigure(*grid4c);
-    amp::Visualizer::makeFigure(*grid4a, path4a);
-    amp::Visualizer::makeFigure(*grid4b, path4b);
-    amp::Visualizer::makeFigure(*grid4c, path4c);
-    amp::Visualizer::makeFigure(problem4a, robot, path4a);
-    amp::Visualizer::makeFigure(problem4b, robot, path4b);
-    amp::Visualizer::makeFigure(problem4c, robot, path4c);
-    amp::Visualizer::showFigures();
+
+    // amp::Visualizer::makeFigure(*grid4a, path4a);
+    // amp::Visualizer::makeFigure(*grid4b, path4b);
+    // amp::Visualizer::makeFigure(*grid4c, path4c);
+    // amp::Visualizer::makeFigure(problem4a, robot, path4a);
+    // amp::Visualizer::makeFigure(problem4b, robot, path4b);
+    // amp::Visualizer::makeFigure(problem4c, robot, path4c);
+    // amp::Visualizer::showFigures();
 
     bool successProb2a = HW6::checkPointAgentPlan(path2a, problem2a);
     LOG("Found valid solution to workspace 2a using point agent?: " << (successProb2a ? "Yes!" : "No :("));
@@ -87,9 +94,6 @@ int main(int argc, char** argv) {
     MyAStarAlgo myAStarAlgo;
 
     // Get the resulting GraphSearchResult
-
-    // input a heuristic of all 0s
-    // heuristic = amp::SearchHeuristic;
     MyAStarAlgo::GraphSearchResult result = myAStarAlgo.search(amp::HW6::getEx3SPP(), amp::HW6::getEx3Heuristic());
 
     // check for success

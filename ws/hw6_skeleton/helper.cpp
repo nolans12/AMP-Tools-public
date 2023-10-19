@@ -571,6 +571,8 @@ amp::Path2D MyManipWFAlgo::planInCSpace(const Eigen::Vector2d& q_init, const Eig
     }
     std::cout << "Finish manipulator path finding" << std::endl;
     path.waypoints.push_back(q_goal);
+    // wrap path
+    amp::unwrapPath(path, Eigen::Vector2d(0,0), Eigen::Vector2d(2*M_PI,2*M_PI));
     return path;
 }
 
@@ -578,7 +580,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     // Initalize graph
     std::shared_ptr<Graph<double>> graph = problem.graph;
     // output the size of the graph
-    std::cout << "Graph Size: " << graph->nodes().size() << std::endl;
+    // std::cout << "Graph Size: " << graph->nodes().size() << std::endl;
     // Create GraphSearchResult to store in
     MyAStarAlgo::GraphSearchResult result;
 
@@ -593,17 +595,18 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
 
     // Add the start node to the queue
     queue.push_back(problem.init_node);
-    cost_map[problem.init_node] = 0; // 0 edge weight
+    cost_map[problem.init_node] = 0 + heuristic.operator()(problem.init_node); // just heuristic
     int count = 0;
 
     // Run while queue is not empty
     while (queue.size() != 0){
         count++;
         // std::cout << count << std::endl;
-        if (count > 10000){
+        if (count > 50000){
             result.success = false;
             return result;
         }
+
         // Get current node
         amp::Node curr_node = queue.front();
         // Pop the first member off the queue
@@ -612,52 +615,43 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
         // now get the neighbors and edge weight
         std::vector<amp::Node> neighbors = graph->children(curr_node);
         std::vector<double> edgeCosts = graph->outgoingEdges(curr_node);
-        // now for each neighbor, go through and create a new map depicting their value of edge cost + heuristic
-        std::map<amp::Node, double> neighbor_cost_map;
+
+        // go through each neighbor, adding the edge cost and current heuristic to the cost map
         for (int i = 0; i < neighbors.size(); i++){
-            neighbor_cost_map[neighbors[i]] = edgeCosts[i] + cost_map.find(curr_node)->second + heuristic.operator()(neighbors[i]);
-        }
-        // now, we can sort the neighbors based on their cost
-        std::sort(neighbors.begin(), neighbors.end(), [&](const amp::Node& a, const amp::Node& b){
-            return neighbor_cost_map.find(a)->second < neighbor_cost_map.find(b)->second;
-        });
-        // this returns a sorted neighbors map, now loop through sorted neighbor map and add to queue
-        for (int i = 0; i < neighbors.size(); i++){
-            // check if neighbor is already in queue
-            bool inQueue = false;
-            for (int j = 0; j < queue.size(); j++){
-                if (queue[j] == neighbors[i]){
-                    inQueue = true;
-                }
-            }
-            double currCost = neighbor_cost_map.find(neighbors[i])->second - heuristic.operator()(neighbors[i]);
-            // if not in queue, add it
-            if (inQueue == false){
-                queue.push_back(neighbors[i]);
-                // also add the cost
-                cost_map[neighbors[i]] = currCost; // dont store the heuristic in the cost map, only sum of weights
+            double currCost = edgeCosts[i] + cost_map.find(curr_node)->second - heuristic.operator()(curr_node) + heuristic.operator()(neighbors[i]);
+            // now check to see if the neighbor is already in the cost map
+            if (cost_map.find(neighbors[i]) == cost_map.end()){
+                // if not, add it to the cost map
+                cost_map[neighbors[i]] = currCost;
                 // add the parent to the parent map
                 parent_map[neighbors[i]] = curr_node;
-                // std::cout << "Added node: " << neighbors[i] << " with cost: " << cost_map.find(neighbors[i])->second << " and with parent node: " << curr_node << std::endl;
+                // add the neighbor to the queue
+                queue.push_back(neighbors[i]);
+                // output the cost of the neighbor
+                // std::cout << "Added Node: " << neighbors[i] << " with cost: " << currCost << " and parent: " << curr_node << std::endl;
             }
-            // if in queue, check to see if current cost will be smaller
-            else{ 
+            else{
+                // if it is, check to see if the current cost is less than the cost in the cost map
                 if (currCost < cost_map.find(neighbors[i])->second){
-                    // if smaller, update the cost map
+                    // if it is, update the cost map
                     cost_map[neighbors[i]] = currCost;
                     // add the parent to the parent map
                     parent_map[neighbors[i]] = curr_node;
-                    // std::cout << "Updated node: " << neighbors[i] << " with cost: " << cost_map.find(neighbors[i])->second << " and with parent node: " << curr_node << std::endl;
+                    // std::cout << "Overrided Node: " << neighbors[i] << " with cost: " << currCost << " and parent: " << curr_node << std::endl;
                 }
             }
         }
+        // now sort the queue based on the cost map
+        std::sort(queue.begin(), queue.end(), [&](const amp::Node& a, const amp::Node& b){
+            return cost_map.find(a)->second < cost_map.find(b)->second;
+        });
     }
     // now, after queue is empty, go thorugh and get the path and return result
     if (cost_map.find(problem.goal_node) != cost_map.end()){
         // Backtrack the path from goal node to the start node
         amp::Node curr_node = problem.goal_node;
         result.node_path.push_back(curr_node);
-        std::cout << "Found Goal Node, has a edge cost of: " << cost_map.find(curr_node)->second << std::endl;
+        // std::cout << "Found Goal Node, has a edge cost of: " << cost_map.find(curr_node)->second << std::endl;
         // std::cout << "Reverse Order of Nodes:" << std::endl;
         result.path_cost = cost_map.find(curr_node)->second;
         while (curr_node != problem.init_node){
