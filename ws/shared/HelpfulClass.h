@@ -36,6 +36,9 @@ class grid : public amp::GridCSpace2D{
             }
 
         bool inCollision(double x0, double x1) const;
+        std::pair<std::size_t, std::size_t> getCellFromPoint(double x0, double x1) const{
+            return {0, 0};
+        }
     private:
         Link2d robot;
         amp::Environment2D environment;

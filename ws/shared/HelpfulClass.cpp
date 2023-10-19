@@ -188,20 +188,21 @@ amp::ManipulatorState Link2d::getConfigurationFromIK(const Eigen::Vector2d& end_
     //     }
     // }
 
-    // double a1 = link_lens[0+count];
-    // double a2 = link_lens[1+count];
+    double a1 = link_lens[0];
+    double a2 = link_lens[1];
 
-    // double c2 = (endLoc.x()*endLoc.x() + endLoc.y()*endLoc.y() - a1*a1 - a2*a2)/(2*a1*a2);
-    // double s2 = sqrt(1-c2*c2);
-    // double t1 = atan2(endLoc.y(), endLoc.x()) - atan2(a2*s2, a1+a2*c2);
-    // double t2 = atan2(s2, c2);
+    double c2 = (endLoc.x()*endLoc.x() + endLoc.y()*endLoc.y() - a1*a1 - a2*a2)/(2*a1*a2);
+    double s2 = sqrt(1-c2*c2);
+    double t1 = atan2(endLoc.y(), endLoc.x()) - atan2(a2*s2, a1+a2*c2);
+    double t2 = atan2(s2, c2);
 
-    // link_angles.push_back(t1);
-    // link_angles.push_back(t2);
+    link_angles.push_back(t1);
+    link_angles.push_back(t2);
 
-    link_angles.push_back(0);
-    link_angles.push_back(0);
-    link_angles.push_back(0);
+    // std::cout << "got to this case" << std::endl;
+    // link_angles.push_back(0);
+    // link_angles.push_back(0);
+    // link_angles.push_back(0);
     return link_angles;
 }
 

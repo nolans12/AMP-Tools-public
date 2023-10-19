@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     }
 
     Visualizer::showFigures();
-
+    
     //HW2::grade<bug1>("nolan.stevenson@colorado.edu", argc, argv); // will abt 15 mins bc I put step size 0.001 to be certain
     //HW2::grade<bug2>("nolan.stevenson@colorado.edu", argc, argv);
 
