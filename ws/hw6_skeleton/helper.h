@@ -4,6 +4,7 @@
 #include "hw/HW2.h"
 #include "Eigen/Geometry"
 #include "HelpfulClass.h"
+#include <queue>
 
 using namespace amp;
 

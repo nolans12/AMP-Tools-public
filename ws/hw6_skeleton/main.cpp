@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 
     // Implement A*
     MyAStarAlgo myAStarAlgo;
-
+    
     // Get the resulting GraphSearchResult
     MyAStarAlgo::GraphSearchResult result = myAStarAlgo.search(amp::HW6::getEx3SPP(), amp::HW6::getEx3Heuristic());
 
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
     LOG("Found valid solution using A*?: " << (successExerecise3 ? "Yes!" : "No :("));
 
     // amp::RNG::seed(amp::RNG::randiUnbounded());
-    amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("nolan.stevenson@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple(), std::make_tuple());
+    // amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("nolan.stevenson@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple(), std::make_tuple());
     return 0;
 
 }
