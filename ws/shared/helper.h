@@ -1,3 +1,5 @@
+#pragma once
+
 #include "AMPCore.h"
 #include "hw/HW6.h"
 #include "hw/HW4.h"
@@ -70,10 +72,10 @@ class MyManipWFAlgo : public amp::ManipulatorWaveFrontAlgorithm {
         virtual amp::Path2D planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace) override;
 };
 
-class MyAStarAlgo : public amp::AStar {
-    public:
-        virtual GraphSearchResult search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) override;
-};
+// class MyAStarAlgo : public amp::AStar {
+//     public:
+//         virtual GraphSearchResult search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) override;
+// };
 
 bool cellCollision(amp::Environment2D environment, Eigen::Vector2d point);
 MyGridCSpace computeManipulatorGrid(amp::Environment2D environment, std::vector<double> linkLengths);

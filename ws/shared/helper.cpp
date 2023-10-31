@@ -59,31 +59,6 @@ std::unique_ptr<amp::GridCSpace2D> MyPointWFAlgo::constructDiscretizedWorkspace(
     return cspace_ptr;
 }
 
-/// @brief This function checks all the obstacles in the environment for a collision with xy position x0, x1
-bool cellCollision(amp::Environment2D environment, Eigen::Vector2d point){
-    std::vector<amp::Obstacle2D> obstacles = environment.obstacles;
-    // loop through all obstacles
-    for (int i = 0; i < obstacles.size(); i++){
-        int count = 0;
-        std::vector<Eigen::Vector2d> vertices = obstacles[i].verticesCCW(); // all vertices of the obstacle
-        // loop through all vertices
-        for (int j = 0; j < vertices.size(); j++){
-                // check the normal angle of a line between each point
-                Eigen::ParametrizedLine<double, 2> line(vertices[j], vertices[(j+1)%vertices.size()] - vertices[j]);
-                Eigen::Vector2d normal(line.direction()[1], -line.direction()[0]);
-
-                if ((normal.dot(point - vertices[j]) <= 0)){ // method for finding if a point is inside polygon
-                    count++;
-                }
-        }
-        // at the end, if count is equal to the vertices size, then in collision
-        if (count == vertices.size()){
-            return true;
-        }
-    }
-    return false;
-}
-
 /// @brief This function computes the grid c space given an environment and linkLengths for a 2 dof manipulator
 std::unique_ptr<amp::GridCSpace2D> MyCSpaceCtor::construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env){
     double x0_min = env.x_min;
@@ -132,32 +107,6 @@ std::unique_ptr<amp::GridCSpace2D> MyCSpaceCtor::construct(const amp::LinkManipu
     std::unique_ptr<amp::GridCSpace2D> cspace = std::make_unique<MyGridCSpace>(c);
     // std::cout << "Constructs manipulator cspace" << std::endl;
     return cspace;
-}
-
-bool inCollisionCheck(double x0, double x1, amp::Environment2D environment, Link2d link){ 
-        amp::ManipulatorState state(2); // joint angles
-        state << x0, x1;
-        // std::cout << "x0: " << state[0] << " x1: " << state[1] << std::endl;
-  
-        // get foward kinematics of all vertices, then check if collide
-        Eigen::Vector2d v0 = link.getJointLocation(state,0);
-        Eigen::Vector2d v1 = link.getJointLocation(state,1);
-        Eigen::Vector2d v2 = link.getJointLocation(state,2);
-
-        // now, find if the line between v0 and v1 and v1 and v2 collides with any of the obstacles
-        for (int i = 0; i < environment.obstacles.size(); i++){
-            amp::Polygon currObs = environment.obstacles[i];
-            // get vertices of the obstacle
-            std::vector<Eigen::Vector2d> obsVertices = currObs.verticesCCW();
-            // now, for each vertice, check if it collides with the line between v0 and v1 and v1 and v2
-            for (int j = 0; j < obsVertices.size(); j++){
-                // check if the line between v0 and v1 and v1 and v2 collides with the line between obsVertices[j] and obsVertices[j+1]
-                if (intersect(v0,v1,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()]) || intersect(v1,v2,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()])){
-                    return true; // if happens at all, return true
-                }
-            }
-        }
-        return false;
 }
 
 /// @brief Function which takes in a grid_cspace and forms a path from q_init to q_goal, using wave front 
@@ -576,183 +525,138 @@ amp::Path2D MyManipWFAlgo::planInCSpace(const Eigen::Vector2d& q_init, const Eig
     return path;
 }
 
+// Rewrite to not have to sort entire queue each time, takes forever, trying to use set instead
 // MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic){
-//     // Initalize graph
+
+//     // initalize the graph
 //     std::shared_ptr<Graph<double>> graph = problem.graph;
-//     // output the size of the graph
-//     // std::cout << "Graph Size: " << graph->nodes().size() << std::endl;
-//     // Create GraphSearchResult to store in
+
+//     // create a GraphSearchResult to store in
 //     MyAStarAlgo::GraphSearchResult result;
 
-//     // Create priority queue
-//     std::vector<amp::Node> queue;
+//     // graph->print("Current Graph");
 
-//     // Create a map to store the cost of each node, will be sum of current heuristic and edge cost
+//     // Priority queue
+//     std::set<std::pair<double, amp::Node>> queue;
+
+//     // Create a map to store the cost of each node, will be sum of heuristic and edge cost
 //     std::map<amp::Node, double> cost_map;
 
-//     // Create a map to store the parent node of each visted node
+//     // Create a map to store the parent node of each visited node
 //     std::map<amp::Node, amp::Node> parent_map;
 
-//     // Add the start node to the queue
-//     queue.push_back(problem.init_node);
-//     cost_map[problem.init_node] = 0 + heuristic.operator()(problem.init_node); // just heuristic
-//     int count = 0;
-
-//     // Run while queue is not empty
-//     while (queue.size() != 0){
+//     // Add the start node to the queue and cost map
+//     queue.insert({heuristic.operator()(problem.init_node), problem.init_node});
+//     cost_map[problem.init_node] = 0;
+//     int count = 1;
+//     while (!queue.empty()) {
 //         count++;
-//         // std::cout << count << std::endl;
-//         if (count > 50000){
-//             result.success = false;
-//             return result;
-//         }
-
-//         // Get current node
-//         amp::Node curr_node = queue.front();
-//         // Pop the first member off the queue
+//         // Get the node with the lowest cost
+//         amp::Node curr_node = queue.begin()->second;
+//         double curr_cost = queue.begin()->first;
 //         queue.erase(queue.begin());
 
-//         // now get the neighbors and edge weight
-//         std::vector<amp::Node> neighbors = graph->children(curr_node);
-//         std::vector<double> edgeCosts = graph->outgoingEdges(curr_node);
-
-//         // go through each neighbor, adding the edge cost and current heuristic to the cost map
-//         for (int i = 0; i < neighbors.size(); i++){
-//             double currCost = edgeCosts[i] + cost_map.find(curr_node)->second - heuristic.operator()(curr_node) + heuristic.operator()(neighbors[i]);
-//             // now check to see if the neighbor is already in the cost map
-//             if (cost_map.find(neighbors[i]) == cost_map.end()){
-//                 // if not, add it to the cost map
-//                 cost_map[neighbors[i]] = currCost;
-//                 // add the parent to the parent map
-//                 parent_map[neighbors[i]] = curr_node;
-//                 // add the neighbor to the queue
-//                 queue.push_back(neighbors[i]);
-//                 // output the cost of the neighbor
-//                 // std::cout << "Added Node: " << neighbors[i] << " with cost: " << currCost << " and parent: " << curr_node << std::endl;
-//             }
-//             else{
-//                 // if it is, check to see if the current cost is less than the cost in the cost map
-//                 if (currCost < cost_map.find(neighbors[i])->second){
-//                     // if it is, update the cost map
-//                     cost_map[neighbors[i]] = currCost;
-//                     // add the parent to the parent map
-//                     parent_map[neighbors[i]] = curr_node;
-//                     // std::cout << "Overrided Node: " << neighbors[i] << " with cost: " << currCost << " and parent: " << curr_node << std::endl;
-//                 }
-//             }
-//         }
-//         // now sort the queue based on the cost map
-//         std::sort(queue.begin(), queue.end(), [&](const amp::Node& a, const amp::Node& b){
-//             return cost_map.find(a)->second < cost_map.find(b)->second;
-//         });
-//     }
-//     // now, after queue is empty, go thorugh and get the path and return result
-//     if (cost_map.find(problem.goal_node) != cost_map.end()){
-//         // Backtrack the path from goal node to the start node
-//         amp::Node curr_node = problem.goal_node;
-//         result.node_path.push_back(curr_node);
-//         // std::cout << "Found Goal Node, has a edge cost of: " << cost_map.find(curr_node)->second << std::endl;
-//         // std::cout << "Reverse Order of Nodes:" << std::endl;
-//         result.path_cost = cost_map.find(curr_node)->second;
-//         while (curr_node != problem.init_node){
-//             curr_node = parent_map.find(curr_node)->second;
+//         // Check if we've reached the goal node
+//         if (curr_node == problem.goal_node) {
+//             // Backtrack the path from the goal node to the start node
+            
+//             // Clear node_path, will override each time goal found
+//             result.node_path.clear();
 //             result.node_path.push_back(curr_node);
-//             // std::cout << curr_node << std::endl;
+//             while (curr_node != problem.init_node) {
+//                 curr_node = parent_map[curr_node];
+//                 result.node_path.push_back(curr_node);
+//             }
+//             std::reverse(result.node_path.begin(), result.node_path.end());
+
+//             // Set the result node cost
+//             result.path_cost = curr_cost;
+//             result.success = true;
+//             break;
 //         }
-//         std::reverse(result.node_path.begin(), result.node_path.end());
-//         // std::cout << "Edge cost: " << result.path_cost << std::endl;
-//         result.path_cost = result.path_cost - heuristic.operator()(problem.goal_node);
-//         result.success = true;
+
+//         // Expand the current node's neighbors
+//         std::vector<amp::Node> neighbors = graph->children(curr_node);
+//         std::vector<double> edge_costs = graph->outgoingEdges(curr_node);
+//         for (int i = 0; i < neighbors.size(); i++) {
+//             amp::Node neighbor = neighbors[i];
+//             double heuristic_cost = heuristic.operator()(neighbor); // only current heuristic
+//             double total_cost = curr_cost + edge_costs[i] + heuristic_cost - heuristic.operator()(curr_node);
+
+//             // Check if we've already visited this node with a lower cost
+//             if (cost_map.find(neighbor) != cost_map.end() && cost_map.find(neighbor)->second <= total_cost) {
+//                 continue;
+//             }
+
+//             // output information
+//             // std::cout << "Added Node: " << neighbor << " with cost: " << total_cost << " and parent: " << curr_node << std::endl;
+
+//             // Update the cost map and parent map
+//             cost_map[neighbor] = total_cost;
+//             parent_map[neighbor] = curr_node;
+
+//             // Add the neighbor to the queue
+//             queue.insert({total_cost, neighbor});
+//         }
 //     }
-//     else{
-//         result.node_path = {};
-//         result.path_cost = INT16_MAX;
-//         result.success = false;
+
+//     // Check if a path was found
+//     if (!result.success) {
+//         std::cout << "No path found from start node to goal node" << std::endl;
 //     }
+
+//     // std::cout << "Number of iterations: " << count << std::endl;
+
 //     return result;
 // }
 
-// Rewrite to not have to sort entire queue each time, takes forever, trying to use set instead
-MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic){
+/// @brief This function checks all the obstacles in the environment for a collision with xy position x0, x1
+bool cellCollision(amp::Environment2D environment, Eigen::Vector2d point){
+    std::vector<amp::Obstacle2D> obstacles = environment.obstacles;
+    // loop through all obstacles
+    for (int i = 0; i < obstacles.size(); i++){
+        int count = 0;
+        std::vector<Eigen::Vector2d> vertices = obstacles[i].verticesCCW(); // all vertices of the obstacle
+        // loop through all vertices
+        for (int j = 0; j < vertices.size(); j++){
+                // check the normal angle of a line between each point
+                Eigen::ParametrizedLine<double, 2> line(vertices[j], vertices[(j+1)%vertices.size()] - vertices[j]);
+                Eigen::Vector2d normal(line.direction()[1], -line.direction()[0]);
 
-    // initalize the graph
-    std::shared_ptr<Graph<double>> graph = problem.graph;
-
-    // create a GraphSearchResult to store in
-    MyAStarAlgo::GraphSearchResult result;
-
-    // graph->print("Current Graph");
-
-    // Priority queue
-    std::set<std::pair<double, amp::Node>> queue;
-
-    // Create a map to store the cost of each node, will be sum of heuristic and edge cost
-    std::map<amp::Node, double> cost_map;
-
-    // Create a map to store the parent node of each visited node
-    std::map<amp::Node, amp::Node> parent_map;
-
-    // Add the start node to the queue and cost map
-    queue.insert({heuristic.operator()(problem.init_node), problem.init_node});
-    cost_map[problem.init_node] = 0;
-    int count = 1;
-    while (!queue.empty()) {
-        count++;
-        // Get the node with the lowest cost
-        amp::Node curr_node = queue.begin()->second;
-        double curr_cost = queue.begin()->first;
-        queue.erase(queue.begin());
-
-        // Check if we've reached the goal node
-        if (curr_node == problem.goal_node) {
-            // Backtrack the path from the goal node to the start node
-            
-            // Clear node_path, will override each time goal found
-            result.node_path.clear();
-            result.node_path.push_back(curr_node);
-            while (curr_node != problem.init_node) {
-                curr_node = parent_map[curr_node];
-                result.node_path.push_back(curr_node);
-            }
-            std::reverse(result.node_path.begin(), result.node_path.end());
-
-            // Set the result node cost
-            result.path_cost = curr_cost;
-            result.success = true;
-            break;
+                if ((normal.dot(point - vertices[j]) <= 0)){ // method for finding if a point is inside polygon
+                    count++;
+                }
         }
-
-        // Expand the current node's neighbors
-        std::vector<amp::Node> neighbors = graph->children(curr_node);
-        std::vector<double> edge_costs = graph->outgoingEdges(curr_node);
-        for (int i = 0; i < neighbors.size(); i++) {
-            amp::Node neighbor = neighbors[i];
-            double heuristic_cost = heuristic.operator()(neighbor); // only current heuristic
-            double total_cost = curr_cost + edge_costs[i] + heuristic_cost - heuristic.operator()(curr_node);
-
-            // Check if we've already visited this node with a lower cost
-            if (cost_map.find(neighbor) != cost_map.end() && cost_map.find(neighbor)->second <= total_cost) {
-                continue;
-            }
-
-            // output information
-            // std::cout << "Added Node: " << neighbor << " with cost: " << total_cost << " and parent: " << curr_node << std::endl;
-
-            // Update the cost map and parent map
-            cost_map[neighbor] = total_cost;
-            parent_map[neighbor] = curr_node;
-
-            // Add the neighbor to the queue
-            queue.insert({total_cost, neighbor});
+        // at the end, if count is equal to the vertices size, then in collision
+        if (count == vertices.size()){
+            return true;
         }
     }
+    return false;
+}
 
-    // Check if a path was found
-    if (!result.success) {
-        std::cout << "No path found from start node to goal node" << std::endl;
-    }
+bool inCollisionCheck(double x0, double x1, amp::Environment2D environment, Link2d link){ 
+        amp::ManipulatorState state(2); // joint angles
+        state << x0, x1;
+        // std::cout << "x0: " << state[0] << " x1: " << state[1] << std::endl;
+  
+        // get foward kinematics of all vertices, then check if collide
+        Eigen::Vector2d v0 = link.getJointLocation(state,0);
+        Eigen::Vector2d v1 = link.getJointLocation(state,1);
+        Eigen::Vector2d v2 = link.getJointLocation(state,2);
 
-    // std::cout << "Number of iterations: " << count << std::endl;
-
-    return result;
+        // now, find if the line between v0 and v1 and v1 and v2 collides with any of the obstacles
+        for (int i = 0; i < environment.obstacles.size(); i++){
+            amp::Polygon currObs = environment.obstacles[i];
+            // get vertices of the obstacle
+            std::vector<Eigen::Vector2d> obsVertices = currObs.verticesCCW();
+            // now, for each vertice, check if it collides with the line between v0 and v1 and v1 and v2
+            for (int j = 0; j < obsVertices.size(); j++){
+                // check if the line between v0 and v1 and v1 and v2 collides with the line between obsVertices[j] and obsVertices[j+1]
+                if (intersect(v0,v1,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()]) || intersect(v1,v2,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()])){
+                    return true; // if happens at all, return true
+                }
+            }
+        }
+        return false;
 }
