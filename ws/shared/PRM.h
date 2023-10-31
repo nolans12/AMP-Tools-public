@@ -30,7 +30,7 @@ class MyPRM2D : public amp::PRM2D, public GenericPRM{
     public:
         MyPRM2D(){
             this->n = 1000;
-            this->r = 0.5;
+            this->r = 2;
         }
 
         /// @brief Constructor

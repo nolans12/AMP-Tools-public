@@ -3,6 +3,15 @@
 /// @brief Runs RRT on the problem using the private hyper parameters
 amp::Path2D MyRRT2D::plan(const amp::Problem2D& problem){
 
+    // get bounds from the problem
+    if (bounds.size() == 0){
+        Eigen::Vector2d xBound = Eigen::Vector2d(problem.x_min, problem.x_max);
+        Eigen::Vector2d yBound = Eigen::Vector2d(problem.y_min, problem.y_max);
+        this->bounds.push_back(xBound);
+        this->bounds.push_back(yBound);
+    }
+
+    // Define the path
     amp::Path2D path;
 
     // Initialize start node
@@ -66,10 +75,6 @@ amp::Path2D MyRRT2D::plan(const amp::Problem2D& problem){
                     MyAStarAlgo aStar;
                     MyAStarAlgo::GraphSearchResult graphResult = aStar.search(searchProblem, heur);
 
-                    // std::cout << "A* success: " << graphResult.success << std::endl;
-                    // Plot roadmap
-                    // amp::Visualizer::makeFigure(problem, graph, nodes);
-
                     if (graphResult.success){
                         // amp::Visualizer::makeFigure(problem, graph, nodes);
                         // Add goal and init to path
@@ -92,7 +97,6 @@ amp::Node MyRRT2D::nearestNode(Eigen::Vector2d state){
     // Go through every node in the map and find the nearest one
     double min_dist = std::numeric_limits<double>::infinity();
     amp::Node nearest;
-
     for (auto& x : nodes){
         double dist = (x.second - state).norm();
         if (dist < min_dist){
@@ -103,8 +107,8 @@ amp::Node MyRRT2D::nearestNode(Eigen::Vector2d state){
     return nearest;
 }
 
+/// @brief Function to return success, path length and compuatation time
 std::tuple<bool, double, double> MyRRT2D::planCompare(const amp::Problem2D& problem){
-    // Need to return success, path length and compuatation time
 
     // Create a timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();

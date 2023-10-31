@@ -2,15 +2,19 @@
 
 amp::Path2D MyPRM2D::plan(const amp::Problem2D& problem ){
 
-    // std::cout << "case 1" << std::endl; 
+    // get bounds from the problem
+    if (bounds.size() == 0){
+        Eigen::Vector2d xBound = Eigen::Vector2d(problem.x_min, problem.x_max);
+        Eigen::Vector2d yBound = Eigen::Vector2d(problem.y_min, problem.y_max);
+        this->bounds.push_back(xBound);
+        this->bounds.push_back(yBound);
+    }
+
     // Convert to a generic PRM problem, Xd dimensions
     Eigen::VectorXd startXd(2);
     Eigen::VectorXd goalXd(2);
     startXd << problem.q_init[0], problem.q_init[1];
     goalXd << problem.q_goal[0], problem.q_goal[1];
-
-    // std::cout << "start: " << startXd << std::endl;
-    // std::cout << "goal: " << goalXd << std::endl;
 
     amp::Path path_generic = planxd(startXd, goalXd, problem);
 
@@ -21,7 +25,7 @@ amp::Path2D MyPRM2D::plan(const amp::Problem2D& problem ){
         curr << path_generic.waypoints[i][0], path_generic.waypoints[i][1];
         path2d.waypoints.push_back(curr);
     }
-    // std::cout << "case 6" << std::endl; 
+
     // Return path
     return path2d;
 }
@@ -36,7 +40,6 @@ amp::Path GenericPRM::planxd(Eigen::VectorXd& init_state, Eigen::VectorXd& goal_
 
     // Sample n times
     sampleSpace(nodes, problem);
-    //  std::cout << "case 2" << std::endl; 
 
     // Add the neighbors to the graph
     for (auto it = nodes.begin(); it != nodes.end(); it++){
@@ -64,12 +67,8 @@ amp::Path GenericPRM::planxd(Eigen::VectorXd& init_state, Eigen::VectorXd& goal_
             }
         }
     }
-    // std::cout << "case 3" << std::endl; 
-    // graph.print();
 
     // Next create the A* path through
-
-    // Create a 'ShortestPathProblem'
     amp::ShortestPathProblem searchProblem;
     searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
     searchProblem.init_node = 0; // set the init and goal nodes as the nodes defined by problem.q_init and problem.q_goal
@@ -77,8 +76,6 @@ amp::Path GenericPRM::planxd(Eigen::VectorXd& init_state, Eigen::VectorXd& goal_
 
     MyAStarAlgo aStar;
     MyAStarAlgo::GraphSearchResult graphResult = aStar.search(searchProblem, heur);
-    // std::cout << "case 4" << std::endl; 
-    // std::cout << graphResult.success << std::endl;
 
     // Now convert the graphResult into a path, returning a non-empty path is had success
     amp::Path path;
@@ -86,12 +83,10 @@ amp::Path GenericPRM::planxd(Eigen::VectorXd& init_state, Eigen::VectorXd& goal_
         // Add goal and init to path
         path.waypoints.push_back(problem.q_init);
         for (amp::Node curr : graphResult.node_path){
-            // std::cout << "Adding node " << curr << " to path" << std::endl;
             path.waypoints.push_back(nodes[curr]);
         }
         path.waypoints.push_back(problem.q_goal);
     }
-    // std::cout << "case 5" << std::endl; 
 
 // // Plot roadmap
 //     // convert nodes to a std::map<amp::Node, Eigen::Vector2d> instead of std::map<amp::Node, Eigen::VectorXd>
@@ -105,7 +100,6 @@ amp::Path GenericPRM::planxd(Eigen::VectorXd& init_state, Eigen::VectorXd& goal_
 }
 
 void GenericPRM::sampleSpace(std::map<amp::Node, Eigen::VectorXd>& nodes, const amp::Problem2D& problem){
-
     int i = 2;
     while(i < n){
         // Create a random state
@@ -128,8 +122,8 @@ void GenericPRM::sampleSpace(std::map<amp::Node, Eigen::VectorXd>& nodes, const 
     return;
 }
 
+/// @brief Function to return success, path length and compuatation time
 std::tuple<bool, double, double> MyPRM2D::planCompare(const amp::Problem2D& problem){
-    // Need to return success, path length and compuatation time
 
     // Create a timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();

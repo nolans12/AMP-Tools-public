@@ -13,10 +13,10 @@
 class MyRRT2D : amp::GoalBiasRRT2D {
     public:
         MyRRT2D(){
-            this->n = 1000;
-            this->r = 0.5;
+            this->n = 10000;
+            this->r = 1;
             this->p_goal = 0.1;
-            this->epsilon = 0.1;
+            this->epsilon = 0.25;
         }
 
         MyRRT2D(Eigen::Vector2d x_bound, Eigen::Vector2d y_bound, double n, double r, double p_goal, double epsilon){

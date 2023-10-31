@@ -15,8 +15,6 @@ bool lineFullCollision(Eigen::VectorXd p1, Eigen::VectorXd p2, amp::Problem2D pr
         for (int j = 0; j < vertices.size(); j++){
             // check if the line collides with any of the vertices
             if (lineCollision(p1_2d, p2_2d, vertices[j%vertices.size()], vertices[(j+1)%vertices.size()])){
-                // std::cout << "hit case" << std::endl;
-                // std::cout << "p1: (" << p1_2d.x() << ", " << p1_2d.y() << ") p2: (" << p2_2d.x() << ", " << p2_2d.y() << ")" << std::endl;
                 return true;
             }
         }
