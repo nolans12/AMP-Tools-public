@@ -62,7 +62,8 @@ int main(int argc, char** argv) {
         std::list<std::vector<double>> pathLength_list;
         std::list<std::vector<double>> computationTime_list;
        
-
+        // std::list<std::vector<double>> data_set = {{200,2}};
+        // std::vector<std::string> labels = {"n=200, r=2"};
         // now loop through all data_set trials, running prm with the given parameters, storing the success rate
         for (auto curr : data_set){
             // Get problem, Hw5
@@ -91,7 +92,15 @@ int main(int argc, char** argv) {
                 MyPRM2D prm(xBound, yBound, n, r);
 
                 // Get the result of the planCompare function
-                std::tuple<bool, double, double> result = prm.planCompare(problem);
+                std::tuple<bool, double, double, amp::Path2D> result = prm.planCompare(problem);
+
+                // amp::Visualizer::makeFigure(problem, std::get<3>(result));
+
+// a.iv. Path smoothing for benchmark
+                amp::Path2D newPath;
+                if (options[2].log && std::get<0>(result)){ 
+                    newPath = pathSmooth(std::get<3>(result), problem);
+                }
 
                 // Add to the success vector
                 if (std::get<0>(result)){
@@ -99,8 +108,12 @@ int main(int argc, char** argv) {
                 }
 
                 // Add the path length vector, only if its non zero
-                if (std::get<1>(result) > 0){
-                    pathLength_vec.push_back({std::get<1>(result)});
+                if (options[2].log && std::get<0>(result)){
+                    pathLength_vec.push_back(newPath.length());
+                }else{
+                    if (std::get<1>(result) > 0){
+                        pathLength_vec.push_back(std::get<1>(result));
+                    }
                 }
 
                 // Add to the computation time vector, dividing by 1e6 to get into seconds
@@ -115,11 +128,6 @@ int main(int argc, char** argv) {
         amp::Visualizer::makeBoxPlot(success_list, labels, "Excersie 1.a.ii., HW5 workspace", "Number of Nodes, Neighborhood Radius", "Number of Successes");
         amp::Visualizer::makeBoxPlot(pathLength_list, labels, "Excersie 1.a.ii., HW5 workspace", "Number of Nodes, Neighborhood Radius", "Path Length");
         amp::Visualizer::makeBoxPlot(computationTime_list, labels, "Excersie 1.a.ii., HW5 workspace", "Number of Nodes, Neighborhood Radius", "Computation Time (milliseconds)");
-    }
-
-// a.iv.
-    if (options[2].log){
-
     }
 
 // b.i.
@@ -188,7 +196,7 @@ int main(int argc, char** argv) {
         // now loop through all data_set trials, running prm with the given parameters, storing the success rate
         for (auto curr : data_set){
             // Get problem, Hw5
-            amp::Problem2D problem = amp::HW2::getWorkspace1();
+            amp::Problem2D problem = amp::HW2::getWorkspace2();
 
             // Bounds as defined
             Eigen::Vector2d xBound = Eigen::Vector2d(problem.x_min, problem.x_max);
@@ -213,7 +221,12 @@ int main(int argc, char** argv) {
                 MyPRM2D prm(xBound, yBound, n, r);
 
                 // Get the result of the planCompare function
-                std::tuple<bool, double, double> result = prm.planCompare(problem);
+                std::tuple<bool, double, double, amp::Path2D> result = prm.planCompare(problem);
+
+                amp::Path2D newPath;
+                if (options[5].log && std::get<0>(result)){ 
+                    newPath = pathSmooth(std::get<3>(result), problem);
+                }
 
                 // Add to the success vector
                 if (std::get<0>(result)){
@@ -221,8 +234,12 @@ int main(int argc, char** argv) {
                 }
 
                 // Add the path length vector, only if its non zero
-                if (std::get<1>(result) > 0){
-                    pathLength_vec.push_back({std::get<1>(result)});
+                if (options[5].log && std::get<0>(result)){
+                    pathLength_vec.push_back(newPath.length());
+                }else{
+                    if (std::get<1>(result) > 0){
+                        pathLength_vec.push_back(std::get<1>(result));
+                    }
                 }
 
                 // Add to the computation time vector, dividing by 1e6 to get into seconds
@@ -234,9 +251,9 @@ int main(int argc, char** argv) {
             computationTime_list.push_back(computationTime_vec);
         }
         // Plot
-        amp::Visualizer::makeBoxPlot(success_list, labels, "Excersie 1.b.ii., HW2 Workspace 1", "Number of Nodes, Neighborhood Radius", "Number of Successes");
-        amp::Visualizer::makeBoxPlot(pathLength_list, labels, "Excersie 1.b.ii., HW2 Workspace 1", "Number of Nodes, Neighborhood Radius", "Path Length");
-        amp::Visualizer::makeBoxPlot(computationTime_list, labels, "Excersie 1.b.ii., HW2 Workspace 1", "Number of Nodes, Neighborhood Radius", "Computation Time (milliseconds)");
+        amp::Visualizer::makeBoxPlot(success_list, labels, "Excersie 1.b.ii., HW2 Workspace 2", "Number of Nodes, Neighborhood Radius", "Number of Successes");
+        amp::Visualizer::makeBoxPlot(pathLength_list, labels, "Excersie 1.b.ii., HW2 Workspace 2", "Number of Nodes, Neighborhood Radius", "Path Length");
+        amp::Visualizer::makeBoxPlot(computationTime_list, labels, "Excersie 1.b.ii., HW2 Workspace 2", "Number of Nodes, Neighborhood Radius", "Computation Time (milliseconds)");
     }
 
 // Exercise 2, RRT
@@ -394,7 +411,7 @@ int main(int argc, char** argv) {
     amp::Visualizer::showFigures();
 
 // Try grade feature
-    amp::HW7::grade<MyPRM2D, MyRRT2D>("nolan.stevenson@colorado.edu", argc, argv);
+    // amp::HW7::grade<MyPRM2D, MyRRT2D>("nolan.stevenson@colorado.edu", argc, argv);
 
     return 0;
 }

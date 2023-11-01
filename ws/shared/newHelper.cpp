@@ -82,3 +82,36 @@ double randomNum(double min, double max){
     std::uniform_real_distribution<double> distr(min, max);
     return distr(eng);
 }
+
+amp::Path2D pathSmooth(amp::Path2D currPath, amp::Problem2D problem){
+    // amp::Visualizer::makeFigure(problem, currPath);
+   
+    // Create a new path
+    amp::Path2D newPath;
+    // set the newPath to have the same values as currPath
+    newPath.waypoints = currPath.waypoints;
+
+    double n = 100;
+    // for 100 times, randomly sample i and j from 0 to n
+    for (int count = 0; count < n; count++){
+        double size = newPath.waypoints.size();
+        int i = std::floor(randomNum(0, size));
+        int j = std::floor(randomNum(0, size));
+        // if i < j, swap them thus i > j
+        if (i == j){
+            continue;
+        }
+        if (i < j){
+            int temp = i;
+            i = j;
+            j = temp;
+        }
+        // check if the line between i and j is in collision
+        if (!lineFullCollision(newPath.waypoints[i], newPath.waypoints[j], problem)){
+            // if no collision, remove inbetween nodes from newPath
+            newPath.waypoints.erase(newPath.waypoints.begin() + j + 1, newPath.waypoints.begin() + i);
+        }
+    }
+    // amp::Visualizer::makeFigure(problem, newPath);
+    return newPath;
+}

@@ -45,6 +45,6 @@ class MyPRM2D : public amp::PRM2D, public GenericPRM{
         virtual amp::Path2D plan(const amp::Problem2D& problem) override;
 
         /// @brief Solves and returns success, path length, and compuatation time
-        std::tuple<bool, double, double> planCompare(const amp::Problem2D& problem);
+        std::tuple<bool, double, double, amp::Path2D> planCompare(const amp::Problem2D& problem);
 
 };

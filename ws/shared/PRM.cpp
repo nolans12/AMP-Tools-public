@@ -123,7 +123,7 @@ void GenericPRM::sampleSpace(std::map<amp::Node, Eigen::VectorXd>& nodes, const 
 }
 
 /// @brief Function to return success, path length and compuatation time
-std::tuple<bool, double, double> MyPRM2D::planCompare(const amp::Problem2D& problem){
+std::tuple<bool, double, double, amp::Path2D> MyPRM2D::planCompare(const amp::Problem2D& problem){
 
     // Create a timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -149,5 +149,5 @@ std::tuple<bool, double, double> MyPRM2D::planCompare(const amp::Problem2D& prob
     double computation_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     // Return the tuple
-    return std::make_tuple(success, path_length, computation_time);
+    return std::make_tuple(success, path_length, computation_time, path);
 }
