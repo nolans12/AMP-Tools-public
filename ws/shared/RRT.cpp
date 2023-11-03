@@ -76,7 +76,7 @@ amp::Path2D MyRRT2D::plan(const amp::Problem2D& problem){
                     MyAStarAlgo::GraphSearchResult graphResult = aStar.search(searchProblem, heur);
 
                     if (graphResult.success){
-                        // amp::Visualizer::makeFigure(problem, graph, nodes);
+                        amp::Visualizer::makeFigure(problem, graph, nodes);
                         // Add goal and init to path
                         path.waypoints.push_back(problem.q_init);
                         for (amp::Node curr : graphResult.node_path){

@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
         bool log;
         std::string name;
     };
-    std::vector<cases> options = {{false, "Exercise 1.a.i."}, {false, "Exercise 1.a.ii."}, {false, "Exercise 1.a.iv."}, {false, "Exercise 1.b.i."}, {false, "Exercise 1.b.ii."}, {false, "Exercise 1.b.iv."}, {false, "Exercise 2.a."}, {false, "Exercise 2.b."}};
+    std::vector<cases> options = {{false, "Exercise 1.a.i."}, {false, "Exercise 1.a.ii."}, {false, "Exercise 1.a.iv."}, {false, "Exercise 1.b.i."}, {false, "Exercise 1.b.ii."}, {false, "Exercise 1.b.iv."}, {true, "Exercise 2.a."}, {false, "Exercise 2.b."}};
 
 // Exercise 1, PRM
 
