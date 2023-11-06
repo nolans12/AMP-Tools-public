@@ -14,7 +14,7 @@ class CentralizedMultiAgentRRT : public amp::MultiAgentCircleMotionPlanner2D {
         /// @brief Solve a motion planning problem. Derive class and override this method
         /// @param problem Multi-agent motion planning problem
         /// @return Array of paths that are ordered corresponding to the `agent_properties` field in `problem`.
-        //virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) = 0;
+        // virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) = 0;
 
         virtual ~CentralizedMultiAgentRRT() {}
 };

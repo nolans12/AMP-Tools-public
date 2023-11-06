@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AMPCore.h"
+#include "hw/HW8.h"
 #include "hw/HW7.h"
 #include "hw/HW6.h"
 #include "HelpfulClass.h"
@@ -47,4 +48,53 @@ class MyRRT2D : amp::GoalBiasRRT2D {
         std::map<amp::Node, Eigen::Vector2d> nodes; // Map of nodes to their state, ONLY 2D FOR NOW
         amp::Graph<double> graph; // Graph of nodes
         amp::LookupSearchHeuristic heur; // Heuristic value for A*
+};
+
+class centralRRT : public amp::CentralizedMultiAgentRRT {
+    public:
+        centralRRT(){
+            this->n = 10000;
+            this->r = 1;
+            this->p_goal = 0.1;
+            this->epsilon = 0.25;
+        }
+
+        centralRRT(double n, double r, double p_goal, double epsilon){
+            this->n = n;
+            this->r = r;
+            this->p_goal = p_goal;
+            this->epsilon = epsilon;
+        }
+
+        /// @brief Solves and returns a path for the multi agent problem
+        virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
+
+        const amp::MultiAgentProblem2D expand(const amp::MultiAgentProblem2D& origProblem);
+    
+        /// @brief Returns nearest node to the given state
+        amp::Node nearestNode(std::vector<Eigen::Vector2d> state);
+
+        bool multiPointCollision(const amp::MultiAgentProblem2D& problem, std::vector<Eigen::Vector2d> points);
+
+        bool multiLineCollision(const amp::MultiAgentProblem2D& problem, std::vector<Eigen::Vector2d> curr, std::vector<Eigen::Vector2d> next);
+
+        bool multiGoalCheck(const amp::MultiAgentProblem2D& problem, std::vector<Eigen::Vector2d> points);
+
+        std::vector<amp::Path2D> getPath(int end_node);
+
+        // /// @brief Solves and returns success, path length, and compuatation time
+        // std::tuple<bool, double, double> planCompare(const amp::MultiAgentProblem2D& problem);
+
+    private:
+        double n; // Sample count
+        double r; // Extend parameter
+        double p_goal; // Probability of sampling the goal
+        double epsilon; // Step size
+
+        double radius; // Radius of the robots
+        double m; // Number of robots
+
+        std::vector<Eigen::Vector2d> bounds; // Bounds of the map, can be N-dimensional of 2D
+        std::map<amp::Node, std::vector<Eigen::Vector2d>> nodes; // Map of nodes to their state, Is a vector of 2D states for each robot
+        amp::Graph<double> graph; // Graph of nodes
 };

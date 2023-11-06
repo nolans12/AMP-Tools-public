@@ -115,3 +115,4 @@ amp::Path2D pathSmooth(amp::Path2D currPath, amp::Problem2D problem){
     // amp::Visualizer::makeFigure(problem, newPath);
     return newPath;
 }
+  
