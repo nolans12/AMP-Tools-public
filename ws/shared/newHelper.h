@@ -10,3 +10,5 @@ bool pointCollision(amp::Environment2D environment, Eigen::Vector2d point);
 bool lineCollision(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);
 double randomNum(double min, double max);
 amp::Path2D pathSmooth(amp::Path2D currPath, amp::Problem2D problem);
+Eigen::Vector2d rayDetect(const amp::MultiAgentProblem2D& problem, const Eigen::Vector2d& point);
+Eigen::Vector2d intersectPoint(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);

@@ -116,3 +116,67 @@ amp::Path2D pathSmooth(amp::Path2D currPath, amp::Problem2D problem){
     return newPath;
 }
   
+Eigen::Vector2d rayDetect(const amp::MultiAgentProblem2D& problem, const Eigen::Vector2d& point){
+    // use ray casting to detect the closest obstacle
+    
+    std::vector<amp::Polygon> obstacles = problem.obstacles;
+    Eigen::Vector2d currMin(INT16_MAX, INT16_MAX); 
+    int numRay = 100;
+
+    for (int i = 0; i < obstacles.size(); i++){
+        // get the vertices of the obstacle
+        std::vector<Eigen::Vector2d> vertices = obstacles[i].verticesCCW();
+
+        // now iterate through the vertices
+        for (int j = 0; j < vertices.size(); j++){
+            // get the current vertex and the next vertex
+            Eigen::Vector2d curr = vertices[j];
+            Eigen::Vector2d next = vertices[(j + 1) % vertices.size()];
+
+            for (int k = 0; k < numRay; k++){
+                // angle of ray
+                double angle = (2 * M_PI * k) / numRay;
+                // cast a ray from point in direction of angle, cast to 1000 units
+                Eigen::Vector2d ray = point + 1000 * Eigen::Vector2d(cos(angle), sin(angle));
+
+                // now check if the point-ray intersects the line segement
+                Eigen::Vector2d intersection = intersectPoint(point, ray, curr, next);
+
+                // now check if the intersection is within the line segment
+                if (intersection.x() != INT16_MAX && intersection.y() != INT16_MAX){ // if the intersection is true
+                    if ((intersection-point).norm() < (currMin-point).norm()){
+                        currMin = intersection;
+                    }
+                }
+            }
+        }
+    }
+    return currMin;
+}
+
+Eigen::Vector2d intersectPoint(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2){
+    double x1 = p1.x();
+    double y1 = p1.y();
+    double x2 = q1.x();
+    double y2 = q1.y();
+    double x3 = p2.x();
+    double y3 = p2.y();
+    double x4 = q2.x();
+    double y4 = q2.y();
+    // Check if none of the lines are of length 0
+    if ((x1 == x2 && y1 == y2) || (x3 == x4 && y3 == y4)) {
+        return Eigen::Vector2d(INT16_MAX, INT16_MAX);
+    }
+    double denom = ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+    // Lines are parallel
+    if (denom == 0) {
+        return Eigen::Vector2d(INT16_MAX, INT16_MAX);
+    }
+    double ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3))/denom;
+    double ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3))/denom;
+    // is the intersection along the segments
+    if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+        return Eigen::Vector2d(INT16_MAX, INT16_MAX);
+    }
+    return Eigen::Vector2d(x1 + ua * (x2 - x1), y1 + ua * (y2 - y1)); // is intersection, return location
+}

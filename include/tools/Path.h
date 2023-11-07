@@ -47,7 +47,7 @@ struct MultiAgentPath2D {
 
     /// @brief `true` if a solution was found, `false` otherwise
     bool valid;
-
+    
     inline std::size_t numAgents() const {return agent_paths.size();}
 };
 

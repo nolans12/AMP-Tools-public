@@ -53,9 +53,10 @@ class MyRRT2D : amp::GoalBiasRRT2D {
 class centralRRT : public amp::CentralizedMultiAgentRRT {
     public:
         centralRRT(){
-            this->n = 10000;
-            this->r = 1;
-            this->p_goal = 0.1;
+            // Default parameters
+            this->n = 75000;
+            this->r = 0.5;
+            this->p_goal = 0.05;
             this->epsilon = 0.25;
         }
 
@@ -83,7 +84,11 @@ class centralRRT : public amp::CentralizedMultiAgentRRT {
         std::vector<amp::Path2D> getPath(int end_node);
 
         // /// @brief Solves and returns success, path length, and compuatation time
-        // std::tuple<bool, double, double> planCompare(const amp::MultiAgentProblem2D& problem);
+        std::tuple<bool, double, double> planCompare(const amp::MultiAgentProblem2D& problem);
+
+        int getTreeSize(){
+            return nodes.size();
+        }
 
     private:
         double n; // Sample count
@@ -96,5 +101,57 @@ class centralRRT : public amp::CentralizedMultiAgentRRT {
 
         std::vector<Eigen::Vector2d> bounds; // Bounds of the map, can be N-dimensional of 2D
         std::map<amp::Node, std::vector<Eigen::Vector2d>> nodes; // Map of nodes to their state, Is a vector of 2D states for each robot
+        amp::Graph<double> graph; // Graph of nodes
+};
+
+class decentralRRT : public amp::DecentralizedMultiAgentRRT{
+     public:
+        decentralRRT(){
+            this->n = 75000;
+            this->r = 0.5;
+            this->p_goal = 0.05;
+            this->epsilon = 0.25;
+        }
+
+        decentralRRT(double n, double r, double p_goal, double epsilon){
+            this->n = n;
+            this->r = r;
+            this->p_goal = p_goal;
+            this->epsilon = epsilon;
+        }
+
+        virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& origProblem) override;
+
+        /// @brief Returns nearest node to the given state
+        amp::Node nearestNode(Eigen::Vector2d state);
+
+        bool pointCollision(const amp::MultiAgentProblem2D& problem, Eigen::Vector2d point);
+
+        bool lineCollisionDecentral(const amp::MultiAgentProblem2D& problem, Eigen::Vector2d curr, Eigen::Vector2d next);
+
+        bool pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d next, Eigen::Vector2d nearest, int timeNew, int timeNear);
+
+        amp::Path2D getPath(int end_node);
+
+        const amp::MultiAgentProblem2D expand(const amp::MultiAgentProblem2D& origProblem);
+
+        /// @brief Solves and returns success, path length, and compuatation time
+        std::tuple<bool, double, double> planCompare(const amp::MultiAgentProblem2D& problem);
+
+        // virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
+
+    private:
+        double n; // Sample count
+        double r; // Extend parameter
+        double p_goal; // Probability of sampling the goal
+        double epsilon; // Step size
+
+        double radius; // Radius of the robots
+        double m; // Number of robots
+
+        std::vector<Eigen::Vector2d> bounds; // Bounds of the map, can be N-dimensional of 2D
+        std::map<amp::Node, Eigen::Vector2d> nodes; // Map of nodes to their state, Is a vector of 2D states for each robot
+        std::map<amp::Node, int> times; // Map from node to time of a robot
+        std::map<int, std::vector<Eigen::Vector2d>> currLocation; // Map from time to current location of each robot
         amp::Graph<double> graph; // Graph of nodes
 };
