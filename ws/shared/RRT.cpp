@@ -151,7 +151,7 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
     // Make sure it is m size
     path.agent_paths = std::vector<amp::Path2D>(problem.agent_properties.size());
 
-    // return path;
+    return path;
 
     // Get the bounds of the problem
     Eigen::Vector2d xBound = Eigen::Vector2d(problem.x_min, problem.x_max);
@@ -180,6 +180,7 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
 
 // Now run RRT
     // Sample up to n times
+    int count = 0;
     int i = 2;
     while (i < n){
 
@@ -247,9 +248,14 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
                 path.agent_paths = getPath(1);
                 return path;
             }
-            i++;
+            // i++;
         }
-        // i++;
+        i++;
+        // count++;
+        // if (count > 50000){
+        //     amp::Visualizer::makeFigure(problem);
+        //     break;
+        // }
     }
 
     return path;
@@ -489,6 +495,7 @@ amp::MultiAgentPath2D decentralRRT::plan(const amp::MultiAgentProblem2D& problem
     
         // Sample up to n times
         int i = 2;
+        int test = 0;
         while (i < n){
 
         // Sample a random state
@@ -537,11 +544,20 @@ amp::MultiAgentPath2D decentralRRT::plan(const amp::MultiAgentProblem2D& problem
                     for (int z = 0; z < pathCurr.waypoints.size(); z++){
                         currLocation[z].push_back(pathCurr.waypoints[z]);
                     }
+                    // Also add the goal node to the vector, for pathCurr.waypoints to n
+                    for (int z = pathCurr.waypoints.size(); z < n; z++){
+                        currLocation[z].push_back(problem.agent_properties[agentNum].q_goal);
+                    }
+
                     break;
                 }
-                i++;
+                // i++;
             }
-            // i++; 
+            i++; 
+            // if (test > 50000){
+            //     amp::Visualizer::makeFigure(problem);
+            //     break;
+            // }
         }
         graph.clear();
         nodes.clear();
@@ -607,7 +623,7 @@ bool decentralRRT::pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d nex
     // Now check the time of the point
     std::vector<Eigen::Vector2d> nextTimePoints = currLocation[timeNext];
     for (int i = 0; i < nextTimePoints.size(); i++){
-        if ((nextTimePoints[i] - next).norm() <= 2.5*radius + 2*epsilon){
+        if ((nextTimePoints[i] - next).norm() <= 2*radius + 2*epsilon){
             return true;
         }
     }
@@ -700,7 +716,7 @@ const amp::MultiAgentProblem2D decentralRRT::expand(const amp::MultiAgentProblem
     return problem;
 }
 
-std::tuple<bool, double, double> decentralRRT::planCompare(const amp::MultiAgentProblem2D& problem){
+std::tuple<bool, double, amp::MultiAgentPath2D> decentralRRT::planCompare(const amp::MultiAgentProblem2D& problem){
 
     // Create a timer
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -719,5 +735,5 @@ std::tuple<bool, double, double> decentralRRT::planCompare(const amp::MultiAgent
     double computation_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     // Return the tuple
-    return std::make_tuple(success, computation_time, 0);
+    return std::make_tuple(success, computation_time, path);
 }

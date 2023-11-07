@@ -107,7 +107,7 @@ class centralRRT : public amp::CentralizedMultiAgentRRT {
 class decentralRRT : public amp::DecentralizedMultiAgentRRT{
      public:
         decentralRRT(){
-            this->n = 75000;
+            this->n = 7500;
             this->r = 0.5;
             this->p_goal = 0.05;
             this->epsilon = 0.25;
@@ -136,7 +136,7 @@ class decentralRRT : public amp::DecentralizedMultiAgentRRT{
         const amp::MultiAgentProblem2D expand(const amp::MultiAgentProblem2D& origProblem);
 
         /// @brief Solves and returns success, path length, and compuatation time
-        std::tuple<bool, double, double> planCompare(const amp::MultiAgentProblem2D& problem);
+        std::tuple<bool, double, amp::MultiAgentPath2D> planCompare(const amp::MultiAgentProblem2D& problem);
 
         // virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
 

@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
         bool log;
         std::string name;
     };
-    std::vector<cases> options = {{false, "Exercise 1.b."}, {false, "Exercise 1.c/d."}, {true, "Exercise 2.b."}, {true, "Exercise 2.c/d"}};
+    std::vector<cases> options = {{false, "Exercise 1.b."}, {false, "Exercise 1.c/d."}, {false, "Exercise 2.b."}, {false, "Exercise 2.c/d"}};
 
 
 // Exercise 1
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
         // plot the workspace
         // amp::Visualizer::makeFigure(prob);
-         amp::Visualizer::makeFigure(prob, path);
+        //  amp::Visualizer::makeFigure(prob, path);
     }
 
 // 1.c/d
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 
         // plot the workspace
         // amp::Visualizer::makeFigure(prob);
-         amp::Visualizer::makeFigure(prob, path);
+        //  amp::Visualizer::makeFigure(prob, path);
 
     }
 
@@ -141,12 +141,35 @@ int main(int argc, char** argv) {
 
             // run 100 iterations
             decentralRRT dRRT(n, r, p_goal, epsilon);
-            std::tuple<bool, double, double> result = dRRT.planCompare(prob);
+            std::tuple<bool, double, amp::MultiAgentPath2D> result = dRRT.planCompare(prob);
 
+            amp::MultiAgentPath2D currPath = std::get<2>(result);
             // Store values in vectors
             if (std::get<0>(result)){
                     success_amount = success_amount + 1;
             }
+            // if (!std::get<0>(result)){
+            //     amp::Visualizer::makeFigure(prob, currPath);
+            //     // Find where the collision is:
+            //     // Go thorugh every individual path2d and find where the two values are within 2 radius of eachother
+            //     for (int j = 0; j < currPath.numAgents(); j++){
+            //         amp::Path2D currPath2DOut = currPath.agent_paths[j];
+            //         for (int k = 0; k < currPath.numAgents(); k++){
+            //             if (j != k){ // not the same path
+            //                 amp::Path2D currPath2DIn = currPath.agent_paths[k];
+            //                 for (int l = 0; l < currPath2DOut.waypoints.size(); l++){
+            //                     for (int m = 0; m < currPath2DIn.waypoints.size(); m++){
+            //                         if (l == m){
+            //                             if ((currPath2DOut.waypoints[l] - currPath2DIn.waypoints[m]).norm() < 2*r){
+            //                                 std::cout << "Collision between robot " << j << " and robot " << k << " at waypoint " << l << " and " << m << std::endl;
+            //                             }
+            //                         }
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
             computationTime_vec.push_back(std::get<1>(result)/1000);
         }
 
@@ -158,12 +181,9 @@ int main(int argc, char** argv) {
         amp::Visualizer::makeBoxPlot(computationTime_list, labels, "Excersie 2.d., m = 6", "Hyper Parameters", "Computation Time (milliseconds)");
     }
 
-    // centralRRT();
-    // DecentralizedMultiAgentRRT temp;
-
     // use grade
-    // amp::HW8::grade<centralRRT, decentralRRT>("nolan.stevenson@colorado.edu", argc, argv);
+    amp::HW8::grade<centralRRT, decentralRRT>("nolan.stevenson@colorado.edu", argc, argv);
 
-    amp::Visualizer::showFigures();
+    // amp::Visualizer::showFigures();
     return 0;
 }
