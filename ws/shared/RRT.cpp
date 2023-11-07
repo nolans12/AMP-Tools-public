@@ -180,7 +180,6 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
 
 // Now run RRT
     // Sample up to n times
-    int count = 0;
     int i = 2;
     while (i < n){
 
@@ -248,14 +247,9 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
                 path.agent_paths = getPath(1);
                 return path;
             }
-            // i++;
+            i++;
         }
-        i++;
-        // count++;
-        // if (count > 50000){
-        //     amp::Visualizer::makeFigure(problem);
-        //     break;
-        // }
+        // i++;
     }
 
     return path;
@@ -482,8 +476,7 @@ amp::MultiAgentPath2D decentralRRT::plan(const amp::MultiAgentProblem2D& problem
     radius = problem.agent_properties[0].radius;
     m = problem.agent_properties.size();
 
-    bool check = false;
-    int count = 0;
+    int maxTime = 0;
 
     for (int agentNum; agentNum < problem.numAgents(); agentNum++){
         
@@ -495,10 +488,8 @@ amp::MultiAgentPath2D decentralRRT::plan(const amp::MultiAgentProblem2D& problem
     
         // Sample up to n times
         int i = 2;
-        int test = 0;
         while (i < n){
 
-        // Sample a random state
             // Check if we should sample the goal
             double p = randomNum(0, 1);
             Eigen::Vector2d random_state;
@@ -520,50 +511,63 @@ amp::MultiAgentPath2D decentralRRT::plan(const amp::MultiAgentProblem2D& problem
 
             // Now try connecting the nearest node to the random state
             // Check if the line between the two states is in collision
-            if (!pointCollision(problem, new_state) && !lineCollisionDecentral(problem, nearest_state, new_state) && !pathCollision(path, new_state, nearest_state, new_time, nearest_time)){
+            if (!pointCollision(problem, new_state, agentNum) && !lineCollisionDecentral(problem, nearest_state, new_state) && !pathCollision(path, new_state, new_time)){
 
-                // Add new node to maps, heuristic and graph
+                // Add new node to maps and graph
                 nodes[i] = new_state;
                 times[i] = new_time;
                 graph.connect(nearest_node, i, (nearest_state - new_state).norm());
 
                 // Check if the new state is the goal state
                 if ((new_state - problem.agent_properties[agentNum].q_goal).norm() < epsilon){
-
-                    nodes[1] = problem.agent_properties[agentNum].q_goal;
-                    times[1] = new_time + 1;
-                    graph.connect(i, 1, (new_state - problem.agent_properties[agentNum].q_goal).norm());
-
-                    // Backout path
-                    pathCurr = getPath(1);
-
-                    // Store path in multi path struct
-                    path.agent_paths[agentNum] = pathCurr;
+                    // check if can add goal state
                     
-                    // Store each node in a vector
-                    for (int z = 0; z < pathCurr.waypoints.size(); z++){
-                        currLocation[z].push_back(pathCurr.waypoints[z]);
-                    }
-                    // Also add the goal node to the vector, for pathCurr.waypoints to n
-                    for (int z = pathCurr.waypoints.size(); z < n; z++){
-                        currLocation[z].push_back(problem.agent_properties[agentNum].q_goal);
+                    // Before adding goal node, have to for loop for all new_time to max_time to check if out of pathCollision
+                    // AKA should wait until added goal? future collision check
+                    bool check = true;
+                    for (int z = new_time; z <= maxTime; z++){
+                        if (pathCollision(path, problem.agent_properties[agentNum].q_goal, z)){ // is a collision between the goal and a prior path at some point along that path!
+                            check = false;
+                            break;
+                        }
                     }
 
-                    break;
+                    if (check){
+
+                       // Offically added goal node
+                        nodes[1] = problem.agent_properties[agentNum].q_goal;
+                        times[1] = new_time + 1;
+                        if (new_time + 1 > maxTime){
+                            maxTime = new_time + 1;
+                        }
+                        graph.connect(i, 1, (new_state - problem.agent_properties[agentNum].q_goal).norm());
+
+                        // Backout path
+                        pathCurr = getPath(1);
+
+                        // Store path in multi path struct
+                        path.agent_paths[agentNum] = pathCurr;
+                        
+                        // Store each node in a vector
+                        for (int z = 0; z < pathCurr.waypoints.size(); z++){
+                            currLocation[z].push_back(pathCurr.waypoints[z]);
+                        }
+                        
+                        // Also store the goal node from time step z to the n
+                        for (int z = pathCurr.waypoints.size(); z < n; z++){
+                            currLocation[z].push_back(problem.agent_properties[agentNum].q_goal);
+                        }
+                        break;
+                    }
                 }
                 // i++;
             }
             i++; 
-            // if (test > 50000){
-            //     amp::Visualizer::makeFigure(problem);
-            //     break;
-            // }
         }
         graph.clear();
         nodes.clear();
         times.clear();
     }
-
     return path;
 }
 
@@ -581,7 +585,7 @@ amp::Node decentralRRT::nearestNode(Eigen::Vector2d state){
     return nearest;
 }
 
-bool decentralRRT::pointCollision(const amp::MultiAgentProblem2D& problem, Eigen::Vector2d point){
+bool decentralRRT::pointCollision(const amp::MultiAgentProblem2D& problem, Eigen::Vector2d point, int currAgent){
     
     // use ray casting to detect the closest obstacle
     Eigen::Vector2d currMin = rayDetect(problem, point);
@@ -591,6 +595,15 @@ bool decentralRRT::pointCollision(const amp::MultiAgentProblem2D& problem, Eigen
         }
     }
     
+    // also avoid all goal points, COMPLETELY, this isnt a sexy solution but it works, for some reason just storing the time till n doesnt work
+    // for (int i = 0; i < problem.agent_properties.size(); i++){
+    //     if (i != currAgent){
+    //         if ((point - problem.agent_properties[i].q_goal).norm() <= 2*radius + epsilon){
+    //             return true;
+    //         }
+    //     }
+    // }
+
     return false;
 }
 
@@ -612,7 +625,7 @@ bool decentralRRT::lineCollisionDecentral(const amp::MultiAgentProblem2D& proble
     return false;
 }
 
-bool decentralRRT::pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d next, Eigen::Vector2d nearest, int timeNext, int timeNear){
+bool decentralRRT::pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d next, int timeNext){
 
     // Get all the amp::Path2D's from the amp::MultiAgentPath2D
     std::vector<amp::Path2D> paths = path.agent_paths;
@@ -627,21 +640,6 @@ bool decentralRRT::pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d nex
             return true;
         }
     }
-
-    // // Now check the line line intersections between the next and nearest points
-    // std::vector<Eigen::Vector2d> nearTimePoints = currLocation[timeNear];
-    // for (int i = 0; i < nextTimePoints.size(); i++){
-    //     Eigen::Vector2d dirVec = (nextTimePoints[i] - nearTimePoints[i]).normalized();
-    //     if (lineCollision(next, nearest, nextTimePoints[i] + dirVec, nearTimePoints[i] - dirVec)){
-    //         std::cout << "Line-line" << std::endl;
-    //         std::cout << "next: " << next << std::endl;
-    //         std::cout << "nearest: " << nearest << std::endl;
-    //         std::cout << "nextTimePoints[i]: " << nextTimePoints[i] << std::endl;
-    //         std::cout << "nearTimePoints[i]: " << nearTimePoints[i] << std::endl;
-
-    //         return true;
-    //     }
-    // }    
 
     return false;
 }

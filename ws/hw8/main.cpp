@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
         double r = 0.5;
         double p_goal = 0.05;
         double epsilon = 0.25;
-        double m = 2;
+        double m = 6;
 
         // Get problem
         amp::MultiAgentProblem2D prob = amp::HW8::getWorkspace1(m);
@@ -112,8 +112,7 @@ int main(int argc, char** argv) {
         bool valid = amp::HW8::check(path, prob);
 
         // plot the workspace
-        // amp::Visualizer::makeFigure(prob);
-        //  amp::Visualizer::makeFigure(prob, path);
+         amp::Visualizer::makeFigure(prob, path);
 
     }
 
@@ -128,7 +127,7 @@ int main(int argc, char** argv) {
         double success_amount;
         std::vector<double> computationTime_vec;
        
-        double n = 7500;
+        double n = 75000;
         double r = 0.5;
         double p_goal = 0.05;
         double epsilon = 0.25;
@@ -148,28 +147,27 @@ int main(int argc, char** argv) {
             if (std::get<0>(result)){
                     success_amount = success_amount + 1;
             }
-            // if (!std::get<0>(result)){
-            //     amp::Visualizer::makeFigure(prob, currPath);
-            //     // Find where the collision is:
-            //     // Go thorugh every individual path2d and find where the two values are within 2 radius of eachother
-            //     for (int j = 0; j < currPath.numAgents(); j++){
-            //         amp::Path2D currPath2DOut = currPath.agent_paths[j];
-            //         for (int k = 0; k < currPath.numAgents(); k++){
-            //             if (j != k){ // not the same path
-            //                 amp::Path2D currPath2DIn = currPath.agent_paths[k];
-            //                 for (int l = 0; l < currPath2DOut.waypoints.size(); l++){
-            //                     for (int m = 0; m < currPath2DIn.waypoints.size(); m++){
-            //                         if (l == m){
-            //                             if ((currPath2DOut.waypoints[l] - currPath2DIn.waypoints[m]).norm() < 2*r){
-            //                                 std::cout << "Collision between robot " << j << " and robot " << k << " at waypoint " << l << " and " << m << std::endl;
-            //                             }
-            //                         }
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
+            if (!std::get<0>(result)){
+                // Visualize the collisions
+                std::vector<std::vector<Eigen::Vector2d>> collision_states;
+                amp::HW8::check(currPath, prob, collision_states);
+                // plot the path
+                amp::Visualizer::makeFigure(prob, currPath);
+                // now output the collision states
+                // for (const auto& agent : collision_states) {
+                //     for (const auto& state : agent) {
+                //         std::cout << state.transpose() << std::endl;
+                //     }
+                //     std::cout << std::endl;
+                // }
+                for (int j = 0; j < collision_states.size(); j++){
+                    std::cout << "Agent " << j << " collided at: " << std::endl;
+                    for (int k = 0; k < collision_states[j].size(); k++){
+                        std::cout << collision_states[j][k].transpose() << std::endl;
+                    }
+                }
+               
+            }
             computationTime_vec.push_back(std::get<1>(result)/1000);
         }
 
@@ -184,6 +182,6 @@ int main(int argc, char** argv) {
     // use grade
     amp::HW8::grade<centralRRT, decentralRRT>("nolan.stevenson@colorado.edu", argc, argv);
 
-    // amp::Visualizer::showFigures();
+    amp::Visualizer::showFigures();
     return 0;
 }

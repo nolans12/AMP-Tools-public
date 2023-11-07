@@ -107,7 +107,7 @@ class centralRRT : public amp::CentralizedMultiAgentRRT {
 class decentralRRT : public amp::DecentralizedMultiAgentRRT{
      public:
         decentralRRT(){
-            this->n = 7500;
+            this->n = 75000;
             this->r = 0.5;
             this->p_goal = 0.05;
             this->epsilon = 0.25;
@@ -125,11 +125,11 @@ class decentralRRT : public amp::DecentralizedMultiAgentRRT{
         /// @brief Returns nearest node to the given state
         amp::Node nearestNode(Eigen::Vector2d state);
 
-        bool pointCollision(const amp::MultiAgentProblem2D& problem, Eigen::Vector2d point);
+        bool pointCollision(const amp::MultiAgentProblem2D& problem, Eigen::Vector2d point, int currAgent);
 
         bool lineCollisionDecentral(const amp::MultiAgentProblem2D& problem, Eigen::Vector2d curr, Eigen::Vector2d next);
 
-        bool pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d next, Eigen::Vector2d nearest, int timeNew, int timeNear);
+        bool pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d next, int timeNew);
 
         amp::Path2D getPath(int end_node);
 
@@ -154,4 +154,5 @@ class decentralRRT : public amp::DecentralizedMultiAgentRRT{
         std::map<amp::Node, int> times; // Map from node to time of a robot
         std::map<int, std::vector<Eigen::Vector2d>> currLocation; // Map from time to current location of each robot
         amp::Graph<double> graph; // Graph of nodes
+        int maxTime; // current max time
 };
