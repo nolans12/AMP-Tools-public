@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
         bool log;
         std::string name;
     };
-    std::vector<cases> options = {{false, "Exercise 1.b."}, {false, "Exercise 1.c/d."}, {false, "Exercise 2.b."}, {false, "Exercise 2.c/d"}};
+    std::vector<cases> options = {{false, "Exercise 1.b."}, {false, "Exercise 1.c/d."}, {true, "Exercise 2.b."}, {false, "Exercise 2.c/d"}};
 
 
 // Exercise 1
@@ -180,8 +180,8 @@ int main(int argc, char** argv) {
     }
 
     // use grade
-    amp::HW8::grade<centralRRT, decentralRRT>("nolan.stevenson@colorado.edu", argc, argv);
+    // amp::HW8::grade<centralRRT, decentralRRT>("nolan.stevenson@colorado.edu", argc, argv);
 
-    // amp::Visualizer::showFigures();
+    amp::Visualizer::showFigures();
     return 0;
 }
