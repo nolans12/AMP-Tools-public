@@ -151,7 +151,7 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
     // Make sure it is m size
     path.agent_paths = std::vector<amp::Path2D>(problem.agent_properties.size());
 
-    return path;
+    // return path;
 
     // Get the bounds of the problem
     Eigen::Vector2d xBound = Eigen::Vector2d(problem.x_min, problem.x_max);
@@ -216,6 +216,7 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
         }
 
         // Check if the line between the two states is in collision or if the new_states are in collision with eachother
+        if (!multiLineCollision(problem, new_states, new_states)){
         if (!multiPointCollision(problem, new_states) && !multiLineCollision(problem, nearest_states, new_states)){
         // if (!multiPointCollision(problem, new_states)){
 
@@ -247,9 +248,10 @@ amp::MultiAgentPath2D centralRRT::plan(const amp::MultiAgentProblem2D& problem){
                 path.agent_paths = getPath(1);
                 return path;
             }
-            i++;
+            // i++;
         }
-        // i++;
+        }
+        i++;
     }
 
     return path;
@@ -327,7 +329,7 @@ bool centralRRT::multiPointCollision(const amp::MultiAgentProblem2D& problem, st
 // First check if points are in collision against eachother
     for (int j = 0; j < m; j++){
         for (int k = j+1; k < m; k++){
-            if ((points[j] - points[k]).norm() <= 2*radius + epsilon){
+            if ((points[j] - points[k]).norm() <= 2*radius + 2*epsilon){
                 return true;
             }
         }
@@ -511,6 +513,7 @@ amp::MultiAgentPath2D decentralRRT::plan(const amp::MultiAgentProblem2D& problem
 
             // Now try connecting the nearest node to the random state
             // Check if the line between the two states is in collision
+            if (!lineCollisionDecentral(problem, nearest_state, new_state)){
             if (!pointCollision(problem, new_state, agentNum) && !lineCollisionDecentral(problem, nearest_state, new_state) && !pathCollision(path, new_state, new_time)){
 
                 // Add new node to maps and graph
@@ -562,6 +565,7 @@ amp::MultiAgentPath2D decentralRRT::plan(const amp::MultiAgentProblem2D& problem
                 }
                 // i++;
             }
+            }
             i++; 
         }
         graph.clear();
@@ -590,7 +594,7 @@ bool decentralRRT::pointCollision(const amp::MultiAgentProblem2D& problem, Eigen
     // use ray casting to detect the closest obstacle
     Eigen::Vector2d currMin = rayDetect(problem, point);
     if (currMin != Eigen::Vector2d(INT16_MAX, INT16_MAX)){
-        if ((currMin - point).norm() <= radius + 2*epsilon){
+        if ((currMin - point).norm() <= radius + epsilon){
             return true;
         }
     }
@@ -636,7 +640,7 @@ bool decentralRRT::pathCollision(amp::MultiAgentPath2D path, Eigen::Vector2d nex
     // Now check the time of the point
     std::vector<Eigen::Vector2d> nextTimePoints = currLocation[timeNext];
     for (int i = 0; i < nextTimePoints.size(); i++){
-        if ((nextTimePoints[i] - next).norm() <= 2*radius + 2*epsilon){
+        if ((nextTimePoints[i] - next).norm() <= 2*radius + epsilon){
             return true;
         }
     }

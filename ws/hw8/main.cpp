@@ -182,6 +182,6 @@ int main(int argc, char** argv) {
     // use grade
     amp::HW8::grade<centralRRT, decentralRRT>("nolan.stevenson@colorado.edu", argc, argv);
 
-    amp::Visualizer::showFigures();
+    // amp::Visualizer::showFigures();
     return 0;
 }
