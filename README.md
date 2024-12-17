@@ -1,7 +1,3 @@
-### NOTE TO ZIPLINE
-The following file folder is an example from a homework assignment completed for my Algorithmic Motion Planning class. In this homework Bug1 and Bug2 were implemented in C++ to find pathing through a randomized polygonal envrionment. I am unsure how many of the following steps you will need to follow to compile the code, hopefully it runs right away for you! The actual code I wrote for this homework assignment is in the subfolder "ws". In this subfolder, main.cpp adjusts what type of environments are called for the Bug1 and Bug2 algorithms. While bug1.cpp, bug2.cpp and the helperFunc.cpp help to solve the motion planning algorithms. To run the code, assuming all dependencies are in place, run "bash build.sh" and then "bash build_and_run.sh". The rest of this README is simply standard from what was provided to us students.
-
-
 # AMP-Tools
 ### Professor: Morteza Lahijanian
 ### Developed by: Peter Amorese
